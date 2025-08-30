@@ -642,3 +642,26 @@ function cp_handle_bulk_picks() {
 	exit;
 }
 add_action( 'admin_post_submit_picks_bulk', 'cp_handle_bulk_picks' );
+
+/**
+ * Format a kickoff_time meta value into a human-readable string.
+ * Accepts 'YYYY-MM-DD HH:MM' or other strtotime-friendly formats.
+ *
+ * @param string $kick Raw kickoff string from post meta.
+ * @return string Formatted kickoff like 'Sat, Aug 30 3:30 PM' or empty string.
+ */
+function cp_format_kickoff( $kick ) {
+	if ( empty( $kick ) ) {
+		return '';
+	}
+	// Try strict format first
+	$dt = DateTime::createFromFormat( 'Y-m-d H:i', $kick );
+	if ( false === $dt ) {
+		try {
+			$dt = new DateTime( $kick );
+		} catch ( Exception $e ) {
+			return esc_html( $kick );
+		}
+	}
+	return $dt->format( 'D, M j g:i A' );
+}

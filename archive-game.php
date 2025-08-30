@@ -11,9 +11,11 @@ get_header();
 		echo '<ul class="cp-game-list">';
 		while ( have_posts() ) :
 			the_post();
-			$home = get_post_meta( get_the_ID(), 'home_team', true );
-			$away = get_post_meta( get_the_ID(), 'away_team', true );
-			echo '<li><a href="' . esc_url( get_permalink() ) . '">' . esc_html( $away ) . ' @ ' . esc_html( $home ) . '</a></li>';
+			$home         = get_post_meta( get_the_ID(), 'home_team', true );
+			$away         = get_post_meta( get_the_ID(), 'away_team', true );
+			$kick         = get_post_meta( get_the_ID(), 'kickoff_time', true );
+			$kick_display = $kick ? cp_format_kickoff( $kick ) : '';
+			echo '<li><a href="' . esc_url( get_permalink() ) . '">' . esc_html( $away ) . ' @ ' . esc_html( $home ) . '</a>' . ( $kick_display ? ' <span class="cp-kick">(' . esc_html( $kick_display ) . ')</span>' : '' ) . '</li>';
 		endwhile;
 		echo '</ul>';
 		the_posts_pagination();

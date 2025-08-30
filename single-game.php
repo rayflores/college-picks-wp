@@ -13,7 +13,7 @@ if ( have_posts() ) :
 	<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 		<h2><?php echo esc_html( $away ); ?> @ <?php echo esc_html( $home ); ?></h2>
 		<?php if ( $kick ) : ?>
-			<div>Kickoff: <?php echo esc_html( $kick ); ?></div>
+			<div>Kickoff: <?php echo esc_html( cp_format_kickoff( $kick ) ); ?></div>
 		<?php endif; ?>
 
 		<?php

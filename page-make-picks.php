@@ -54,7 +54,7 @@ $games = get_posts(
 						<?php
 						if ( $kick ) :
 							?>
-							<div class="cp-game-kick"><?php echo esc_html( $kick ); ?></div><?php endif; ?>
+							<div class="cp-game-kick"><?php echo esc_html( cp_format_kickoff( $kick ) ); ?></div><?php endif; ?>
 						<label><input type="radio" name="cp_picks[<?php echo intval( $g->ID ); ?>]" value="home" <?php checked( $user_choice, 'home' ); ?>> <?php echo esc_html( $home ); ?></label>
 						<label><input type="radio" name="cp_picks[<?php echo intval( $g->ID ); ?>]" value="away" <?php checked( $user_choice, 'away' ); ?>> <?php echo esc_html( $away ); ?></label>
 					</li>
