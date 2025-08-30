@@ -13,7 +13,8 @@ $current_user_id = get_current_user_id();
 $week            = 1; // show picks for week 1 by default
 
 // pull games for this week that have not started and have no result yet
-$now_ts = current_time( 'timestamp' );
+// Use WP-formatted current time and convert to timestamp for consistent comparisons.
+$now_ts = strtotime( current_time( 'Y-m-d H:i' ) );
 
 // Fetch week posts with no result, then filter by kickoff time in PHP to avoid meta-format issues.
 $all_week_games = get_posts(
@@ -29,10 +30,11 @@ $all_week_games = get_posts(
 				'value'   => '',
 				'compare' => '=',
 			),
+			// match common week formats (e.g. '1' or 'Week 1')
 			array(
 				'key'     => 'week',
 				'value'   => strval( $week ),
-				'compare' => '=',
+				'compare' => 'LIKE',
 			),
 		),
 	)
@@ -47,22 +49,29 @@ foreach ( $all_week_games as $g ) {
 		continue;
 	}
 
-	// Parse kickoff to a timestamp and compare to now
-	$dt = DateTime::createFromFormat( 'Y-m-d H:i', $kick );
-	if ( false === $dt ) {
-		try {
-			$dt = new DateTime( $kick );
-		} catch ( Exception $e ) {
-			$dt = false;
+	// Try a fast parse with strtotime first, then fall back to DateTime.
+	$ts  = false;
+	$try = strtotime( $kick );
+	if ( $try !== false ) {
+		$ts = (int) $try;
+	} else {
+		$dt = DateTime::createFromFormat( 'Y-m-d H:i', $kick );
+		if ( false === $dt ) {
+			try {
+				$dt = new DateTime( $kick );
+			} catch ( Exception $e ) {
+				$dt = false;
+			}
+		}
+		if ( $dt ) {
+			$ts = (int) $dt->getTimestamp();
 		}
 	}
-	if ( $dt ) {
-		$ts = (int) $dt->getTimestamp();
-		if ( $ts >= $now_ts ) {
-			$games[] = $g;
-		}
-	} else {
-		// if parsing failed, include by default
+
+	if ( $ts === false ) {
+		// couldn't parse kickoff — include by default
+		$games[] = $g;
+	} elseif ( $ts >= $now_ts ) {
 		$games[] = $g;
 	}
 }
