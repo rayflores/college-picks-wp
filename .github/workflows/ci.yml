@@ -1,29 +1,27 @@
-name: CI
+name: Deploy Theme
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  php-lint:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.0'
-
-      - name: Validate PHP syntax
+      - name: Deploy with rsync over SSH
+        env:
+          SSH_KEY: ${{ secrets.LT_SSH_KEY }}
         run: |
-          find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+          echo "$SSH_KEY" > key.pem
+          chmod 600 key.pem
+          rsync -avz --delete -e "ssh -i key.pem -p 65002 -o StrictHostKeyChecking=no" ./ u962042185@77.37.57.103:/home/u962042185/domains/floressquad.com/public_html/wp-content/themes/college-picks/
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Run phpcs (WordPress standard)
-        run: composer run phpcs
+      - name: Generate deployed files report
+        run: |
+          mkdir -p deployment-logs
+          find . -type f | sort > deployment-logs/deployed-files.txt
+          echo "Deployed files report generated at deployment-logs/deployed-files.txt"
