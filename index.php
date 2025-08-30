@@ -11,6 +11,7 @@
 	<section class="cp-games">
 	<h1>Upcoming Games</h1>
 	<?php
+	$now = current_time( 'Y-m-d H:i' );
 	$games = new WP_Query(
 		array(
 			'post_type'      => 'game',
@@ -18,6 +19,14 @@
 			'orderby'        => 'meta_value',
 			'meta_key'       => 'kickoff_time',
 			'order'          => 'ASC',
+			'meta_query'     => array(
+				array(
+					'key'     => 'kickoff_time',
+					'value'   => $now,
+					'compare' => '>=',
+					'type'    => 'CHAR',
+				),
+			),
 		)
 	);
 	if ( $games->have_posts() ) :
@@ -61,7 +70,8 @@
 			echo '<li class="cp-game-item">';
 			echo '<a href="' . esc_url( get_permalink() ) . '"><strong>' . esc_html( $away ) . ' @ ' . esc_html( $home ) . '</strong></a>';
 			if ( $kick ) {
-				echo '<div class="cp-kick">Kickoff: ' . esc_html( $kick ) . '</div>';
+				$readable = function_exists( 'cp_format_kickoff' ) ? cp_format_kickoff( $kick ) : $kick;
+				echo '<div class="cp-kick">Kickoff: ' . esc_html( $readable ) . '</div>';
 			}
 			if ( $week ) {
 				echo '<div class="cp-week">Week: ' . esc_html( $week ) . '</div>';
