@@ -1,0 +1,26 @@
+<?php
+/**
+ * Archive for games
+ */
+get_header();
+?>
+<main>
+	<h1>Games Archive</h1>
+	<?php
+	if ( have_posts() ) :
+		echo '<ul class="cp-game-list">';
+		while ( have_posts() ) :
+			the_post();
+			$home = get_post_meta( get_the_ID(), 'home_team', true );
+			$away = get_post_meta( get_the_ID(), 'away_team', true );
+			echo '<li><a href="' . esc_url( get_permalink() ) . '">' . esc_html( $away ) . ' @ ' . esc_html( $home ) . '</a></li>';
+		endwhile;
+		echo '</ul>';
+		the_posts_pagination();
+	else :
+		echo '<p>No games found.</p>';
+	endif;
+	?>
+</main>
+<?php
+get_footer();
