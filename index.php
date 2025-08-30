@@ -16,13 +16,43 @@
 		)
 	);
 	if ( $games->have_posts() ) :
-		echo '<ul class="cp-game-list">';
+		$last_date = '';
+		$opened_ul = false;
 		while ( $games->have_posts() ) :
 			$games->the_post();
 			$home = get_post_meta( get_the_ID(), 'home_team', true );
 			$away = get_post_meta( get_the_ID(), 'away_team', true );
 			$kick = get_post_meta( get_the_ID(), 'kickoff_time', true );
 			$week = get_post_meta( get_the_ID(), 'week', true );
+
+			// Determine date grouping key and human label
+			$date_key   = 'tbd';
+			$date_label = 'TBD';
+			if ( ! empty( $kick ) ) {
+				$dt = DateTime::createFromFormat( 'Y-m-d H:i', $kick );
+				if ( false === $dt ) {
+					try {
+						$dt = new DateTime( $kick );
+					} catch ( Exception $e ) {
+						$dt = false;
+					}
+				}
+				if ( $dt ) {
+					$date_key   = $dt->format( 'Y-m-d' );
+					$date_label = $dt->format( 'l, M j' );
+				}
+			}
+
+			if ( $date_key !== $last_date ) {
+				if ( $opened_ul ) {
+					echo '</ul>';
+				}
+				echo '<h2 class="cp-game-date">' . esc_html( $date_label ) . '</h2>';
+				echo '<ul class="cp-game-list">';
+				$opened_ul = true;
+				$last_date = $date_key;
+			}
+
 			echo '<li class="cp-game-item">';
 			echo '<a href="' . esc_url( get_permalink() ) . '"><strong>' . esc_html( $away ) . ' @ ' . esc_html( $home ) . '</strong></a>';
 			if ( $kick ) {
@@ -33,7 +63,9 @@
 			}
 			echo '</li>';
 		endwhile;
-		echo '</ul>';
+		if ( $opened_ul ) {
+			echo '</ul>';
+		}
 		wp_reset_postdata();
 	else :
 		echo '<p>No games found.</p>';
