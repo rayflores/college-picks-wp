@@ -19,10 +19,19 @@ $all_week_games = get_posts(
 		'post_type'      => 'game',
 		'posts_per_page' => -1,
 		'meta_query'     => array(
+			'relation' => 'AND',
+			// include posts where 'result' is not set OR is empty
 			array(
-				'key'     => 'result',
-				'value'   => '',
-				'compare' => '=',
+				'relation' => 'OR',
+				array(
+					'key'     => 'result',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => 'result',
+					'value'   => '',
+					'compare' => '=',
+				),
 			),
 			array(
 				'key'     => 'week',
