@@ -10,9 +10,13 @@ if ( ! is_user_logged_in() ) {
 }
 
 $current_user_id = get_current_user_id();
-$week            = ''; // optional: could read from query or settings
-// pull games for this week (unexpired)
-$games = get_posts(
+$week            = 1; // show picks for week 1 by default
+
+// pull games for this week that have not started and have no result yet
+$now_ts = current_time( 'timestamp' );
+
+// Fetch week posts with no result, then filter by kickoff time in PHP to avoid meta-format issues.
+$all_week_games = get_posts(
 	array(
 		'post_type'      => 'game',
 		'posts_per_page' => -1,
@@ -25,9 +29,43 @@ $games = get_posts(
 				'value'   => '',
 				'compare' => '=',
 			),
+			array(
+				'key'     => 'week',
+				'value'   => strval( $week ),
+				'compare' => '=',
+			),
 		),
 	)
 );
+
+$games = array();
+foreach ( $all_week_games as $g ) {
+	$kick = get_post_meta( $g->ID, 'kickoff_time', true );
+	if ( empty( $kick ) ) {
+		// include games with unknown kickoff (TBD)
+		$games[] = $g;
+		continue;
+	}
+
+	// Parse kickoff to a timestamp and compare to now
+	$dt = DateTime::createFromFormat( 'Y-m-d H:i', $kick );
+	if ( false === $dt ) {
+		try {
+			$dt = new DateTime( $kick );
+		} catch ( Exception $e ) {
+			$dt = false;
+		}
+	}
+	if ( $dt ) {
+		$ts = (int) $dt->getTimestamp();
+		if ( $ts >= $now_ts ) {
+			$games[] = $g;
+		}
+	} else {
+		// if parsing failed, include by default
+		$games[] = $g;
+	}
+}
 ?>
 <div class="wrap">
 	<h1>Make Your Picks</h1>

@@ -11,7 +11,7 @@
 	<section class="cp-games">
 	<h1>Upcoming Games</h1>
 	<?php
-	$now = current_time( 'Y-m-d H:i' );
+	$now   = current_time( 'Y-m-d H:i' );
 	$games = new WP_Query(
 		array(
 			'post_type'      => 'game',
