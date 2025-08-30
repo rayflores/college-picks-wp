@@ -13,24 +13,17 @@ $current_user_id = get_current_user_id();
 $week            = 1; // show picks for week 1 by default
 
 // pull games for this week that have not started and have no result yet
-// Use WP-formatted current time and convert to timestamp for consistent comparisons.
-$now_ts = strtotime( current_time( 'Y-m-d H:i' ) );
-
-// Fetch week posts with no result, then filter by kickoff time in PHP to avoid meta-format issues.
+// Fetch all week posts with no result. Do not sort by kickoff_time; list all matches.
 $all_week_games = get_posts(
 	array(
 		'post_type'      => 'game',
 		'posts_per_page' => -1,
-		'meta_key'       => 'kickoff_time',
-		'orderby'        => 'meta_value',
-		'order'          => 'ASC',
 		'meta_query'     => array(
 			array(
 				'key'     => 'result',
 				'value'   => '',
 				'compare' => '=',
 			),
-			// match common week formats (e.g. '1' or 'Week 1')
 			array(
 				'key'     => 'week',
 				'value'   => strval( $week ),
@@ -40,41 +33,7 @@ $all_week_games = get_posts(
 	)
 );
 
-$games = array();
-foreach ( $all_week_games as $g ) {
-	$kick = get_post_meta( $g->ID, 'kickoff_time', true );
-	if ( empty( $kick ) ) {
-		// include games with unknown kickoff (TBD)
-		$games[] = $g;
-		continue;
-	}
-
-	// Try a fast parse with strtotime first, then fall back to DateTime.
-	$ts  = false;
-	$try = strtotime( $kick );
-	if ( $try !== false ) {
-		$ts = (int) $try;
-	} else {
-		$dt = DateTime::createFromFormat( 'Y-m-d H:i', $kick );
-		if ( false === $dt ) {
-			try {
-				$dt = new DateTime( $kick );
-			} catch ( Exception $e ) {
-				$dt = false;
-			}
-		}
-		if ( $dt ) {
-			$ts = (int) $dt->getTimestamp();
-		}
-	}
-
-	if ( $ts === false ) {
-		// couldn't parse kickoff — include by default
-		$games[] = $g;
-	} elseif ( $ts >= $now_ts ) {
-		$games[] = $g;
-	}
-}
+$games = $all_week_games;
 ?>
 <div class="wrap">
 	<h1>Make Your Picks</h1>
