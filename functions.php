@@ -197,47 +197,7 @@ function cp_handle_pick_submission() {
 add_action( 'admin_post_submit_pick', 'cp_handle_pick_submission' );
 add_action( 'admin_post_nopriv_submit_pick', 'cp_handle_pick_submission' );
 
-// Leaderboard shortcode: counts picks per user
-function cp_leaderboard_shortcode( $atts ) {
-	$picks  = get_posts(
-		array(
-			'post_type'      => 'pick',
-			'posts_per_page' => -1,
-			'post_status'    => 'publish',
-		)
-	);
-	$scores = array();
-	foreach ( $picks as $p ) {
-		$author = $p->post_author;
-		if ( ! isset( $scores[ $author ] ) ) {
-			$scores[ $author ] = 0;
-		}
-		++$scores[ $author ];
-	}
-	// convert to array of arrays with display name
-	$rows = array();
-	foreach ( $scores as $user_id => $count ) {
-		$user   = get_userdata( $user_id );
-		$rows[] = array(
-			'name'  => $user ? $user->display_name : 'User ' . $user_id,
-			'count' => $count,
-		);
-	}
-	usort(
-		$rows,
-		function ( $a, $b ) {
-			return $b['count'] - $a['count'];
-		}
-	);
-	ob_start();
-	echo '<div class="cp-leaderboard"><h3>Leaderboard</h3><ol>';
-	foreach ( $rows as $r ) {
-		echo '<li>' . esc_html( $r['name'] ) . ' — ' . intval( $r['count'] ) . ' picks</li>';
-	}
-	echo '</ol></div>';
-	return ob_get_clean();
-}
-add_shortcode( 'college_picks_leaderboard', 'cp_leaderboard_shortcode' );
+
 
 /**
  * Compute leaderboard for a specific week. Returns ordered array of users with stats.
@@ -366,38 +326,43 @@ function cp_get_week_leaderboard( $week = null ) {
 /**
  * Shortcode renderer: [college_picks_leaderboard week="1" top="10"]
  */
-function cp_leaderboard_shortcode( $atts ) {
-	$atts = shortcode_atts(
-		array(
-			'week' => '',
-			'top'  => 10,
-		),
-		$atts,
-		'college_picks_leaderboard'
-	);
-	$week = $atts['week'] ?: null;
-	$top  = intval( $atts['top'] );
-	$rows = cp_get_week_leaderboard( $week );
+if ( ! function_exists( 'cp_leaderboard_shortcode' ) ) {
+	function cp_leaderboard_shortcode( $atts ) {
+		$atts = shortcode_atts(
+			array(
+				'week' => '',
+				'top'  => 10,
+			),
+			$atts,
+			'college_picks_leaderboard'
+		);
+		$week = $atts['week'] ?: null;
+		$top  = intval( $atts['top'] );
+		$rows = cp_get_week_leaderboard( $week );
 
-	if ( empty( $rows ) ) {
-		return '<div class="cp-leaderboard"><p>No leaderboard data available for this week.</p></div>';
-	}
-
-	ob_start();
-	echo '<div class="cp-leaderboard"><h3>Leaderboard</h3><ol>';
-	$count = 0;
-	foreach ( $rows as $r ) {
-		if ( $count >= $top ) {
-			break;
+		if ( empty( $rows ) ) {
+			return '<div class="cp-leaderboard"><p>No leaderboard data available for this week.</p></div>';
 		}
-		++$count;
-		printf( '<li>%s — %d correct of %d picks (%s%%)</li>', esc_html( $r['name'] ), intval( $r['correct'] ), intval( $r['total'] ), esc_html( number_format_i18n( $r['percent'], 1 ) ) );
+
+		ob_start();
+		echo '<div class="cp-leaderboard"><h3>Leaderboard</h3><ol>';
+		$count = 0;
+		foreach ( $rows as $r ) {
+			if ( $count >= $top ) {
+				break;
+			}
+			++$count;
+			printf( '<li>%s — %d correct of %d picks (%s%%)</li>', esc_html( $r['name'] ), intval( $r['correct'] ), intval( $r['total'] ), esc_html( number_format_i18n( $r['percent'], 1 ) ) );
+		}
+		echo '</ol></div>';
+		return ob_get_clean();
 	}
-	echo '</ol></div>';
-	return ob_get_clean();
+	// Ensure shortcode is registered once
+	if ( shortcode_exists( 'college_picks_leaderboard' ) ) {
+		remove_shortcode( 'college_picks_leaderboard' );
+	}
+	add_shortcode( 'college_picks_leaderboard', 'cp_leaderboard_shortcode' );
 }
-remove_shortcode( 'college_picks_leaderboard' );
-add_shortcode( 'college_picks_leaderboard', 'cp_leaderboard_shortcode' );
 
 /**
  * Admin: add submenu page under Games for CSV import
