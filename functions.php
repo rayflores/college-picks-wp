@@ -573,3 +573,72 @@ function cp_handle_import_games() {
 	exit;
 }
 add_action( 'admin_post_cp_import_games', 'cp_handle_import_games' );
+
+/**
+ * Handle bulk picks submission from the Make Picks page.
+ */
+function cp_handle_bulk_picks() {
+	if ( ! is_user_logged_in() ) {
+		wp_safe_redirect( wp_login_url( wp_get_referer() ) );
+		exit;
+	}
+	if ( ! isset( $_POST['cp_submit_picks_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['cp_submit_picks_nonce'] ), 'cp_submit_picks' ) ) {
+		wp_die( 'Invalid request' );
+	}
+	$user_id = get_current_user_id();
+	$picks   = isset( $_POST['cp_picks'] ) && is_array( $_POST['cp_picks'] ) ? wp_unslash( $_POST['cp_picks'] ) : array();
+	$saved   = 0;
+	foreach ( $picks as $game_id => $choice ) {
+		$game_id = intval( $game_id );
+		$choice  = sanitize_text_field( $choice );
+		if ( ! in_array( $choice, array( 'home', 'away' ), true ) ) {
+			continue;
+		}
+		// update or create pick
+		$existing = get_posts(
+			array(
+				'post_type'      => 'pick',
+				'author'         => $user_id,
+				'meta_key'       => 'game_id',
+				'meta_value'     => $game_id,
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+			)
+		);
+		if ( ! empty( $existing ) ) {
+			$pick_id = $existing[0];
+			wp_update_post(
+				array(
+					'ID'          => $pick_id,
+					'post_status' => 'publish',
+				)
+			);
+			update_post_meta( $pick_id, 'pick_choice', $choice );
+		} else {
+			$title   = sprintf( 'Pick: user %d - game %d', $user_id, $game_id );
+			$pick_id = wp_insert_post(
+				array(
+					'post_title'  => $title,
+					'post_type'   => 'pick',
+					'post_status' => 'publish',
+					'post_author' => $user_id,
+				)
+			);
+			if ( $pick_id && ! is_wp_error( $pick_id ) ) {
+				update_post_meta( $pick_id, 'game_id', $game_id );
+				update_post_meta( $pick_id, 'pick_choice', $choice );
+			}
+		}
+		++$saved;
+	}
+	$redirect = add_query_arg(
+		array(
+			'cp_picks' => 'saved',
+			'saved'    => $saved,
+		),
+		wp_get_referer() ?: home_url()
+	);
+	wp_safe_redirect( $redirect );
+	exit;
+}
+add_action( 'admin_post_submit_picks_bulk', 'cp_handle_bulk_picks' );

@@ -2,6 +2,11 @@
 <main id="site-content" role="main">
 	<section class="cp-leaderboard-top">
 		<?php echo do_shortcode( '[college_picks_leaderboard]' ); ?>
+		<?php if ( is_user_logged_in() ) : ?>
+			<p><a class="button button-primary" href="<?php echo esc_url( home_url( '/make-picks/' ) ); ?>">Make Picks for this Week</a></p>
+		<?php else : ?>
+			<p><a class="button" href="<?php echo esc_url( wp_login_url( home_url( '/make-picks/' ) ) ); ?>">Log in to make picks</a></p>
+		<?php endif; ?>
 	</section>
 	<section class="cp-games">
 	<h1>Upcoming Games</h1>
