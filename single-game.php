@@ -17,7 +17,18 @@ if ( have_posts() ) :
 		<?php endif; ?>
 
 		<?php
-		if ( is_user_logged_in() ) :
+		$game_result = get_post_meta( get_the_ID(), 'result', true );
+		if ( ! empty( $game_result ) ) :
+			// Show result and skip pick form
+			if ( 'home' === $game_result ) {
+				$winner = esc_html( $home );
+			} elseif ( 'away' === $game_result ) {
+				$winner = esc_html( $away );
+			} else {
+				$winner = 'Tie/Push';
+			}
+			echo '<p><strong>Result:</strong> ' . $winner . '</p>';
+		elseif ( is_user_logged_in() ) :
 			$current_user_id = get_current_user_id();
 			$existing        = get_posts(
 				array(

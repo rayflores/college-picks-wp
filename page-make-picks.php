@@ -19,6 +19,13 @@ $games = get_posts(
 		'meta_key'       => 'kickoff_time',
 		'orderby'        => 'meta_value',
 		'order'          => 'ASC',
+		'meta_query'     => array(
+			array(
+				'key'     => 'result',
+				'value'   => '',
+				'compare' => '=',
+			),
+		),
 	)
 );
 ?>

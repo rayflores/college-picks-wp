@@ -151,7 +151,15 @@ function cp_handle_pick_submission() {
 	}
 	$user_id = get_current_user_id();
 	$game_id = isset( $_POST['game_id'] ) ? intval( $_POST['game_id'] ) : 0;
-	$choice  = isset( $_POST['pick_choice'] ) ? sanitize_text_field( wp_unslash( $_POST['pick_choice'] ) ) : '';
+	// Prevent picking for games that already have a result (archived)
+	if ( $game_id ) {
+		$game_result = get_post_meta( $game_id, 'result', true );
+		if ( ! empty( $game_result ) ) {
+			wp_safe_redirect( add_query_arg( 'pick', 'closed', wp_get_referer() ) );
+			exit;
+		}
+	}
+	$choice = isset( $_POST['pick_choice'] ) ? sanitize_text_field( wp_unslash( $_POST['pick_choice'] ) ) : '';
 	if ( ! $game_id || empty( $choice ) ) {
 		wp_safe_redirect( add_query_arg( 'pick', 'error', wp_get_referer() ) );
 		exit;
@@ -664,4 +672,120 @@ function cp_format_kickoff( $kick ) {
 		}
 	}
 	return $dt->format( 'D, M j g:i A' );
+}
+
+
+/**
+ * Seed picks for specific games for all users. Admin-only action.
+ */
+function cp_seed_picks_for_games() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'Insufficient permissions' );
+	}
+	// optional nonce protection via _wpnonce in query string
+	if ( isset( $_GET['_wpnonce'] ) && ! wp_verify_nonce( wp_unslash( $_GET['_wpnonce'] ), 'cp_seed_picks' ) ) {
+		wp_die( 'Invalid nonce' );
+	}
+
+	$mapping = array(
+		5483 => 'home',
+		5456 => 'home',
+	);
+
+	$user_ids = get_users( array( 'fields' => 'ID' ) );
+	$inserted = 0;
+	$skipped  = 0;
+
+	foreach ( $user_ids as $uid ) {
+		foreach ( $mapping as $game_id => $choice ) {
+			$game_id = intval( $game_id );
+			if ( ! in_array( $choice, array( 'home', 'away', 'tie' ), true ) ) {
+				++$skipped;
+				continue;
+			}
+
+			$existing = get_posts(
+				array(
+					'post_type'      => 'pick',
+					'author'         => $uid,
+					'meta_key'       => 'game_id',
+					'meta_value'     => $game_id,
+					'posts_per_page' => 1,
+					'fields'         => 'ids',
+				)
+			);
+			if ( ! empty( $existing ) ) {
+				++$skipped;
+				continue;
+			}
+
+			$title   = sprintf( 'Pick: user %d - game %d', $uid, $game_id );
+			$pick_id = wp_insert_post(
+				array(
+					'post_title'  => $title,
+					'post_type'   => 'pick',
+					'post_status' => 'publish',
+					'post_author' => $uid,
+				)
+			);
+			if ( $pick_id && ! is_wp_error( $pick_id ) ) {
+				update_post_meta( $pick_id, 'game_id', $game_id );
+				update_post_meta( $pick_id, 'pick_choice', sanitize_text_field( $choice ) );
+				++$inserted;
+			} else {
+				++$skipped;
+			}
+		}
+	}
+
+	wp_safe_redirect(
+		add_query_arg(
+			array(
+				'cp_seed'  => 'done',
+				'inserted' => $inserted,
+				'skipped'  => $skipped,
+			),
+			wp_get_referer() ?: admin_url()
+		)
+	);
+	exit;
+}
+add_action( 'admin_post_cp_seed_picks', 'cp_seed_picks_for_games' );
+
+
+/**
+ * Add a Tools submenu page to run the seed picks action from the admin.
+ */
+function cp_add_seed_tool_page() {
+	add_management_page(
+		__( 'Seed Picks', 'college-picks' ),
+		__( 'Seed Picks', 'college-picks' ),
+		'manage_options',
+		'cp-seed-picks',
+		'cp_render_seed_tool_page'
+	);
+}
+add_action( 'admin_menu', 'cp_add_seed_tool_page' );
+
+
+/**
+ * Render the seed picks admin page with a nonce-protected link.
+ */
+function cp_render_seed_tool_page() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Insufficient permissions', 'college-picks' ) );
+	}
+
+	$url = wp_nonce_url( admin_url( 'admin-post.php?action=cp_seed_picks' ), 'cp_seed_picks' );
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'Seed Picks', 'college-picks' ); ?></h1>
+		<p><?php esc_html_e( 'This will create picks for all users for the two historical games (5483 and 5456). Use only once.', 'college-picks' ); ?></p>
+		<p>
+			<a class="button button-primary" href="<?php echo esc_url( $url ); ?>" onclick="return confirm('<?php echo esc_js( 'Are you sure you want to seed picks for all users? This cannot be easily undone.' ); ?>');">
+				<?php esc_html_e( 'Run Seed Picks', 'college-picks' ); ?>
+			</a>
+		</p>
+	</div>
+	<?php
 }
