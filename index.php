@@ -1,5 +1,8 @@
 <?php get_header(); ?>
 <main id="site-content" role="main">
+	<section class="cp-leaderboard-top">
+		<?php echo do_shortcode( '[college_picks_leaderboard]' ); ?>
+	</section>
 	<section class="cp-games">
 	<h1>Upcoming Games</h1>
 	<?php
