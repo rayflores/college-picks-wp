@@ -34,7 +34,7 @@ $picks = get_posts(
 	<?php if ( empty( $picks ) ) : ?>
 		<p>You haven't made any picks yet. Visit the <a href="<?php echo esc_url( get_permalink( get_page_by_path( 'make-picks' ) ) ); ?>">Make Picks</a> page to add picks.</p>
 	<?php else : ?>
-		<ul class="cp-my-picks">
+		<ol class="cp-my-picks">
 			<?php foreach ( $picks as $p ) : ?>
 				<?php
 				$game_id = get_post_meta( $p->ID, 'game_id', true );
@@ -81,7 +81,7 @@ $picks = get_posts(
 					</div>
 				</li>
 			<?php endforeach; ?>
-		</ul>
+		</ol>
 	<?php endif; ?>
 </div>
 
