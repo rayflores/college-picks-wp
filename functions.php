@@ -9,6 +9,37 @@ function cp_theme_setup() {
 }
 add_action( 'after_setup_theme', 'cp_theme_setup' );
 
+/**
+ * Register theme menus.
+ */
+function cp_register_menus() {
+	register_nav_menus(
+		array(
+			'primary' => __( 'Primary Menu', 'college-picks' ),
+		)
+	);
+}
+add_action( 'after_setup_theme', 'cp_register_menus' );
+
+/**
+ * Hide the admin bar for non-administrators.
+ * Administrators keep the admin bar visible.
+ *
+ * @param bool $show Whether to show the admin bar.
+ * @return bool
+ */
+function cp_maybe_hide_admin_bar( $show ) {
+	if ( ! is_user_logged_in() ) {
+		return false;
+	}
+	$user = wp_get_current_user();
+	if ( in_array( 'administrator', (array) $user->roles, true ) ) {
+		return $show;
+	}
+	return false;
+}
+add_filter( 'show_admin_bar', 'cp_maybe_hide_admin_bar' );
+
 function cp_enqueue_assets() {
 	wp_enqueue_style( 'college-picks-style', get_stylesheet_uri() );
 }
@@ -789,3 +820,45 @@ function cp_render_seed_tool_page() {
 	</div>
 	<?php
 }
+
+
+/**
+ * Modify the admin columns for the 'game' post type.
+ *
+ * @param array $columns Existing columns for the post list table.
+ * @return array Modified columns with 'cp_result' inserted after the title.
+ */
+function cp_game_admin_columns( $columns ) {
+	$new = array();
+	foreach ( $columns as $key => $label ) {
+		$new[ $key ] = $label;
+		// Insert our column after the Title column.
+		if ( 'title' === $key ) {
+			$new['cp_result'] = __( 'Result', 'college-picks' );
+		}
+	}
+	return $new;
+}
+add_filter( 'manage_edit-game_columns', 'cp_game_admin_columns' );
+
+/**
+ * Render custom column content for games.
+ *
+ * @param string $column  Column name.
+ * @param int    $post_id Post ID.
+ */
+function cp_game_render_custom_column( $column, $post_id ) {
+	if ( 'cp_result' !== $column ) {
+		return;
+	}
+	$result = get_post_meta( $post_id, 'result', true );
+	$labels = array(
+		''     => '—',
+		'home' => 'Home team won',
+		'away' => 'Away team won',
+		'tie'  => 'Tie / Push',
+	);
+	$out    = isset( $labels[ $result ] ) ? $labels[ $result ] : esc_html( $result );
+	echo esc_html( $out );
+}
+add_action( 'manage_game_posts_custom_column', 'cp_game_render_custom_column', 10, 2 );
