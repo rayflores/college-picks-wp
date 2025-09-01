@@ -1,5 +1,6 @@
 <?php get_header(); ?>
 <main id="site-content" role="main">
+	<div class="main-container">
 	<section class="cp-leaderboard-top">
 		<?php echo do_shortcode( '[college_picks_leaderboard]' ); ?>
 		<?php if ( is_user_logged_in() ) : ?>
@@ -87,5 +88,6 @@
 	endif;
 	?>
 	</section>
+	</div>
 </main>
 <?php get_footer(); ?>

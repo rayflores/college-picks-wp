@@ -8,6 +8,9 @@
  */
 
 get_header();
+?>
+<div class="main-container">
+<?php
 
 if ( ! is_user_logged_in() ) {
 	echo '<div class="wrap"><p>You must <a href="' . esc_url( wp_login_url( get_permalink() ) ) . '">log in</a> to view your picks.</p></div>';
@@ -83,7 +86,7 @@ $picks = get_posts(
 			<?php endforeach; ?>
 		</ol>
 	<?php endif; ?>
+	</div>
 </div>
-
 <?php
 get_footer();

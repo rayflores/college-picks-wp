@@ -1,6 +1,82 @@
 /*
 Theme Name: College Picks
-Description: React-based picks app
+Description: family college picks weekend theme
 Version: 0.1
-Author: PedalCMS
+Author: rayflores
 */
+
+/* Theme overrides and layout styles */
+
+/* Base body spacing and font (moved from header). */
+body {
+	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	margin: 20px;
+}
+
+/* Navbar tweaks */
+.navbar-brand {
+	font-weight: 600;
+}
+
+/* Menu spacing */
+.navbar-nav .nav-item {
+	margin-right: 0.5rem;
+}
+
+/* Game list and pick items */
+.cp-game-list {
+	list-style: none;
+	padding: 0;
+}
+.cp-game-item {
+	margin: 12px 0;
+	padding: 10px;
+	border: 1px solid #eee;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.cp-pick-form {
+	margin-top: 8px;
+}
+
+/* Profile dropdown name styling */
+.cp-profile .me-2 {
+	font-weight: 500;
+}
+
+/* Mobile bottom navigation */
+.cp-bottom-navbar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1030; /* above other content but below modals */
+	background: #fff;
+	border-top: 1px solid rgba(0, 0, 0, 0.08);
+	padding: env(safe-area-inset-bottom, 0.5rem) 0.5rem 0.5rem;
+}
+.cp-bottom-navbar .nav {
+	display: flex;
+	gap: 0.25rem;
+	align-items: center;
+	justify-content: space-around;
+}
+.cp-bottom-navbar .nav-link {
+	padding: 0.35rem 0.5rem;
+	font-size: 0.9rem;
+}
+
+/* Make sure page content is not obscured by the fixed bottom nav on small screens */
+@media (max-width: 991px) {
+	.main-container {
+		padding-bottom: 4.5rem; /* leave room for bottom nav */
+	}
+}
+
+/* Small responsive container width for content area (optional) */
+.main-container {
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 1rem;
+}

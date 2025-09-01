@@ -3,6 +3,9 @@
  * Single game view with pick form
  */
 get_header();
+?>
+<div class="main-container">
+<?php
 if ( have_posts() ) :
 	while ( have_posts() ) :
 		the_post();
@@ -86,4 +89,7 @@ if ( have_posts() ) :
 			<?php
 endwhile;
 endif;
+?>
+</div>
+<?php
 get_footer();

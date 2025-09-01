@@ -5,6 +5,7 @@
 get_header();
 ?>
 <main>
+	<div class="main-container">
 	<h1>Games Archive</h1>
 	<?php
 	if ( have_posts() ) :
@@ -23,6 +24,7 @@ get_header();
 		echo '<p>No games found.</p>';
 	endif;
 	?>
+	</div>
 </main>
 <?php
 get_footer();

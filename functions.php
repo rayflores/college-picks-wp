@@ -22,6 +22,40 @@ function cp_register_menus() {
 add_action( 'after_setup_theme', 'cp_register_menus' );
 
 /**
+ * Ensure wp_nav_menu outputs Bootstrap-friendly classes for items and links.
+ *
+ * @param array  $atts  HTML attributes for the menu item's anchor.
+ * @param object $item  Menu item object.
+ * @param array  $args  Arguments for wp_nav_menu.
+ * @param int    $depth Depth.
+ * @return array
+ */
+function cp_nav_menu_link_attributes( $atts, $item, $args, $depth ) {
+	if ( isset( $args->menu_class ) && ( false !== strpos( $args->menu_class, 'navbar-nav' ) || false !== strpos( $args->menu_class, 'cp-bottom-nav' ) ) ) {
+		$atts['class'] = isset( $atts['class'] ) ? $atts['class'] . ' nav-link' : 'nav-link';
+	}
+	return $atts;
+}
+add_filter( 'nav_menu_link_attributes', 'cp_nav_menu_link_attributes', 10, 4 );
+
+/**
+ * Add nav-item class to li elements when rendering nav menus.
+ *
+ * @param string $classes Space-separated list of classes.
+ * @param object $item    Menu item.
+ * @param array  $args    Arguments.
+ * @param int    $depth   Depth.
+ * @return string
+ */
+function cp_nav_menu_css_class( $classes, $item, $args, $depth ) {
+	if ( isset( $args->menu_class ) && ( false !== strpos( $args->menu_class, 'navbar-nav' ) || false !== strpos( $args->menu_class, 'cp-bottom-nav' ) ) ) {
+		$classes[] = 'nav-item';
+	}
+	return $classes;
+}
+add_filter( 'nav_menu_css_class', 'cp_nav_menu_css_class', 10, 4 );
+
+/**
  * Hide the admin bar for non-administrators.
  * Administrators keep the admin bar visible.
  *
@@ -41,9 +75,29 @@ function cp_maybe_hide_admin_bar( $show ) {
 add_filter( 'show_admin_bar', 'cp_maybe_hide_admin_bar' );
 
 function cp_enqueue_assets() {
-	wp_enqueue_style( 'college-picks-style', get_stylesheet_uri() );
+	// Bootstrap 5 CSS from CDN.
+	wp_enqueue_style( 'cp-bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', array(), '5.3.2' );
+
+	// Theme stylesheet depends on Bootstrap so it can override styles.
+	$theme_style_ver = file_exists( get_stylesheet_directory() . '/style.css' ) ? filemtime( get_stylesheet_directory() . '/style.css' ) : false;
+	wp_enqueue_style( 'college-picks-style', get_stylesheet_uri(), array( 'cp-bootstrap-css' ), $theme_style_ver );
+
+	// Bootstrap bundle (includes Popper) in footer.
+	wp_enqueue_script( 'cp-bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', array(), '5.3.2', true );
 }
 add_action( 'wp_enqueue_scripts', 'cp_enqueue_assets' );
+
+/**
+ * Add small admin stylesheet for metabox input widths.
+ */
+function cp_admin_styles() {
+	// Register a tiny inline stylesheet handle and attach CSS for metabox inputs.
+	wp_register_style( 'cp-admin-inline', false );
+	wp_enqueue_style( 'cp-admin-inline' );
+	$css = "#cp_game_details input[type='text'] { width:100%; box-sizing:border-box; }";
+	wp_add_inline_style( 'cp-admin-inline', $css );
+}
+add_action( 'admin_enqueue_scripts', 'cp_admin_styles' );
 
 // Register custom post type: Game
 function cp_register_cpt_game() {
@@ -109,19 +163,19 @@ function cp_render_game_metabox( $post ) {
 	?>
 	<p>
 		<label>Home Team:<br>
-		<input type="text" name="home_team" value="<?php echo esc_attr( $home ); ?>" style="width:100%"></label>
+		<input type="text" name="home_team" value="<?php echo esc_attr( $home ); ?>"></label>
 	</p>
 	<p>
 		<label>Away Team:<br>
-		<input type="text" name="away_team" value="<?php echo esc_attr( $away ); ?>" style="width:100%"></label>
+		<input type="text" name="away_team" value="<?php echo esc_attr( $away ); ?>"></label>
 	</p>
 	<p>
 		<label>Kickoff Time (YYYY-MM-DD HH:MM):<br>
-		<input type="text" name="kickoff_time" value="<?php echo esc_attr( $kick ); ?>" style="width:100%"></label>
+		<input type="text" name="kickoff_time" value="<?php echo esc_attr( $kick ); ?>"></label>
 	</p>
 	<p>
 		<label>Week:<br>
-		<input type="text" name="week" value="<?php echo esc_attr( $week ); ?>" style="width:100%"></label>
+		<input type="text" name="week" value="<?php echo esc_attr( $week ); ?>"></label>
 	</p>
 	<p>
 		<label>Result:<br>
