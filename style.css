@@ -137,6 +137,14 @@ body {
 .cp-winner { box-shadow: inset 0 -48px 48px rgba(0,0,0,0.35); border-color: rgba(0,200,120,0.12); }
 .cp-winner .team-label { color:#dfffe6; }
 
+/* User selection states */
+.cp-matchup-team.cp-selected { box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+.cp-matchup-team.cp-selected-correct { border: 2px solid rgba(102, 255, 179, 0.9); box-shadow: 0 10px 30px rgba(20,120,60,0.18); }
+.cp-matchup-team.cp-selected-correct .team-label { color: #eafff0; }
+.cp-matchup-team.cp-selected-incorrect { border: 2px solid rgba(180, 40, 40, 0.95); box-shadow: 0 10px 30px rgba(120,20,20,0.18); }
+.cp-matchup-team.cp-selected-incorrect .team-label { color: #ffdede; }
+
+
 /* Submit bar that sits above bottom nav on mobile */
 .cp-submit-bar {
 	position: fixed;

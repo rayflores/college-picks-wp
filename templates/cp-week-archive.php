@@ -101,25 +101,67 @@ foreach ( $weeks as $wk ) {
 			$kick   = get_post_meta( $g->ID, 'kickoff_time', true );
 			$result = get_post_meta( $g->ID, 'result', true );
 
+				// Determine current user's pick for this game (if logged in)
+				$user_pick = '';
+			if ( is_user_logged_in() ) {
+				$uid      = get_current_user_id();
+				$existing = get_posts(
+					array(
+						'post_type'      => 'pick',
+						'author'         => $uid,
+						'meta_key'       => 'game_id',
+						'meta_value'     => $g->ID,
+						'posts_per_page' => 1,
+						'fields'         => 'ids',
+					)
+				);
+				if ( ! empty( $existing ) ) {
+					$pick_id   = $existing[0];
+					$user_pick = get_post_meta( $pick_id, 'pick_choice', true );
+				}
+			}
+
 			printf( '<div class="cp-matchup-card" data-matchup-id="%d">', intval( $g->ID ) );
 			echo '<div class="cp-matchup-header">' . esc_html( strtoupper( date_i18n( 'D n/j', strtotime( $kick ) ) ) ) . ' • ' . esc_html( strtoupper( date_i18n( 'g:i A', strtotime( $kick ) ) ) ) . '</div>';
 			echo '<div class="cp-matchup-body">';
 
-			// Home team
-			$home_classes = 'cp-matchup-team';
+				// Home team
+				$home_classes = 'cp-matchup-team';
 			if ( 'home' === $result ) {
 				$home_classes .= ' cp-winner';
 			}
-			printf( '<div class="%s" data-team="home">', esc_attr( $home_classes ) );
+				// Mark if the current user selected this team and whether it was correct/incorrect
+			if ( 'home' === $user_pick ) {
+				$home_classes .= ' cp-selected';
+				if ( ! empty( $result ) ) {
+					if ( $user_pick === $result ) {
+						$home_classes .= ' cp-selected-correct';
+					} else {
+						$home_classes .= ' cp-selected-incorrect';
+					}
+				}
+			}
+				printf( '<div class="%s" data-team="home">', esc_attr( $home_classes ) );
 			printf( '<div><div class="team-label">%s</div><div class="team-sub">Home</div></div>', esc_html( $home ) );
 			echo '</div>';
 
-			// Away team
-			$away_classes = 'cp-matchup-team';
+				// Away team
+				$away_classes = 'cp-matchup-team';
 			if ( 'away' === $result ) {
 				$away_classes .= ' cp-winner';
 			}
-			printf( '<div class="%s" data-team="away">', esc_attr( $away_classes ) );
+				// Mark if the current user selected this team and whether it was correct/incorrect
+			if ( 'away' === $user_pick ) {
+				$away_classes .= ' cp-selected';
+				if ( ! empty( $result ) ) {
+					if ( $user_pick === $result ) {
+						$away_classes .= ' cp-selected-correct';
+					} else {
+						$away_classes .= ' cp-selected-incorrect';
+					}
+				}
+			}
+				printf( '<div class="%s" data-team="away">', esc_attr( $away_classes ) );
 			printf( '<div><div class="team-label">%s</div><div class="team-sub">Away</div></div>', esc_html( $away ) );
 			echo '</div>';
 
