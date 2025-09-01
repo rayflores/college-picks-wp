@@ -51,28 +51,119 @@ body {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	z-index: 1030; /* above other content but below modals */
-	background: #fff;
+	z-index: 1060; /* above most content */
+	background: #ffffffcc; /* slight transparency to blend with content */
+	backdrop-filter: blur(4px);
 	border-top: 1px solid rgba(0, 0, 0, 0.08);
-	padding: env(safe-area-inset-bottom, 0.5rem) 0.5rem 0.5rem;
+	box-shadow: 0 -4px 16px rgba(8, 10, 15, 0.06);
+	padding: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) 0.25rem 0.25rem;
+	height: calc(env(safe-area-inset-bottom, 0px) + 56px);
+	display: flex;
+	align-items: center;
 }
 .cp-bottom-navbar .nav {
 	display: flex;
 	gap: 0.25rem;
 	align-items: center;
 	justify-content: space-around;
+	width: 100%;
 }
 .cp-bottom-navbar .nav-link {
-	padding: 0.35rem 0.5rem;
-	font-size: 0.9rem;
+	padding: 0.5rem 0.25rem;
+	font-size: 0.95rem;
 }
 
 /* Make sure page content is not obscured by the fixed bottom nav on small screens */
 @media (max-width: 991px) {
 	.main-container {
-		padding-bottom: 4.5rem; /* leave room for bottom nav */
+		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px); /* leave room for bottom nav */
 	}
 }
+
+/* Dark card UI for matchups and week tabs */
+.cp-weeks { margin-bottom: 1rem; }
+.cp-week-tabs { display:flex; gap:0.5rem; margin-bottom:1rem; }
+.cp-week-tab {
+	background: #141416;
+	color: #bfc3c6;
+	padding: 0.6rem 0.9rem;
+	border-radius: 8px;
+	border: 1px solid rgba(255,255,255,0.04);
+	cursor: pointer;
+}
+.cp-week-tab.active {
+	background: #0b1220;
+	color: #fff;
+	box-shadow: 0 4px 12px rgba(2,6,23,0.6);
+	border-color: rgba(0,123,255,0.6);
+}
+
+.cp-week-panel { display:none; }
+.cp-week-panel.active { display:block; }
+
+.cp-matchup-grid { display:flex; gap:1rem; flex-wrap:wrap; }
+.cp-matchup-card {
+	background: linear-gradient(180deg,#111217 0%, #0b0d10 100%);
+	border: 1px solid rgba(255,255,255,0.03);
+	border-radius: 12px;
+	padding: 0.5rem;
+	width:100%;
+	max-width: 540px;
+}
+.cp-matchup-header { text-align:center; color:#9aa0a6; font-size:0.8rem; margin-bottom:0.5rem; }
+.cp-matchup-body { display:flex; gap:0.5rem; }
+.cp-matchup-team {
+	flex:1;
+	min-height:92px;
+	border-radius:10px;
+	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	color:#e6e6e6;
+	cursor:pointer;
+	transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+	position:relative;
+	overflow:hidden;
+}
+.cp-matchup-team:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(2,6,23,0.6); }
+.cp-matchup-team.selected { outline: 2px solid rgba(0,123,255,0.9); box-shadow: 0 14px 30px rgba(2,6,23,0.7); }
+.cp-matchup-team .team-label { font-weight:700; color:#fff; text-align:center; }
+.cp-matchup-team .team-sub { color:#b7bdc0; font-size:0.85rem; margin-top:6px; }
+
+.cp-matchup-footer { display:flex; justify-content:space-between; color:#9aa0a6; font-size:0.8rem; margin-top:0.5rem; }
+
+/* Archive winner highlight */
+.cp-winner { box-shadow: inset 0 -48px 48px rgba(0,0,0,0.35); border-color: rgba(0,200,120,0.12); }
+.cp-winner .team-label { color:#dfffe6; }
+
+/* Submit bar that sits above bottom nav on mobile */
+.cp-submit-bar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	z-index: 1070; /* above the bottom nav which is 1060 */
+	background: rgba(10,12,15,0.95);
+	border-top: 1px solid rgba(255,255,255,0.04);
+	padding: 0.6rem 1rem;
+	box-shadow: 0 -6px 24px rgba(2,6,23,0.6);
+}
+.cp-submit-bar .btn { border-radius: 28px; padding: 0.5rem 1.2rem; }
+.cp-submit-bar .cp-progress { height:8px; background: rgba(255,255,255,0.06); border-radius:8px; }
+.cp-submit-bar .cp-progress .progress-bar { background: linear-gradient(90deg,#4da6ff,#6f8cff); }
+
+@media (max-width: 991px) {
+	/* Lift submit bar above the mobile bottom nav */
+	.cp-submit-bar { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px); }
+	/* Increase main content bottom padding to clear both submit bar and bottom nav */
+	.main-container { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 160px); }
+}
+
+@media (min-width: 992px) {
+	/* Desktop: keep the submit bar fixed near the bottom but with smaller offset */
+	.cp-submit-bar { bottom: 16px; border-radius: 10px; margin: 0 16px; }
+}
+
 
 /* Small responsive container width for content area (optional) */
 .main-container {

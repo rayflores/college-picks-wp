@@ -84,6 +84,9 @@ function cp_enqueue_assets() {
 
 	// Bootstrap bundle (includes Popper) in footer.
 	wp_enqueue_script( 'cp-bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js', array(), '5.3.2', true );
+
+	// Theme UI behaviors
+	wp_enqueue_script( 'cp-ui', get_stylesheet_directory_uri() . '/assets/js/cp-ui.js', array(), filemtime( get_stylesheet_directory() . '/assets/js/cp-ui.js' ), true );
 }
 add_action( 'wp_enqueue_scripts', 'cp_enqueue_assets' );
 
