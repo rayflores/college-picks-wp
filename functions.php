@@ -462,9 +462,10 @@ if ( ! function_exists( 'cp_leaderboard_shortcode' ) ) {
 				break;
 			}
 			++$count;
-			$rank = $count;
+			$rank   = $count;
+			$losses = isset( $r['total'] ) && isset( $r['correct'] ) ? intval( $r['total'] ) - intval( $r['correct'] ) : 0;
 			// Build a display for W-L and points if available; fallback to placeholders
-			$wl  = isset( $r['correct'] ) ? esc_html( $r['correct'] ) . '/' . esc_html( $r['total'] ) : '—';
+			$wl  = isset( $r['correct'] ) ? esc_html( $r['correct'] ) . '-' . esc_html( $losses ) : '—';
 			$pts = isset( $r['correct'] ) ? intval( $r['correct'] ) : 0;
 			$pct = isset( $r['percent'] ) ? esc_html( number_format_i18n( $r['percent'], 1 ) ) : '0';
 			$wk  = isset( $week ) ? esc_html( $week ) : '—';
