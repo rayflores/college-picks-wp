@@ -172,6 +172,22 @@ body {
 	.cp-submit-bar { bottom: 16px; border-radius: 10px; margin: 0 16px; }
 }
 
+/* Leaderboard table styling */
+.cp-leaderboard-wrap { overflow-x: auto; margin-top: 0.5rem; }
+.cp-leaderboard-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; color:#e6e6e6; }
+.cp-leaderboard-table thead th { background: #0e0f11; color: #cfd4d6; padding: 10px 12px; text-align: left; font-weight:700; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.cp-leaderboard-table tbody td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.cp-leaderboard-table tr { background: linear-gradient(180deg,#0b0c0e, #0b0b0b); }
+.cp-leaderboard-table tr:nth-child(even) { background: #0a0b0c; }
+.cp-leaderboard-table tbody tr:hover { background: #222; }
+.cp-leaderboard-table .rank { width:64px; font-weight:700; color:#fff; }
+.cp-leaderboard-table .entry a { color:#77a6ff; text-decoration:none; }
+.cp-leaderboard-table .entry a:hover { text-decoration:underline; }
+.cp-leaderboard-table .wl, .cp-leaderboard-table .pts, .cp-leaderboard-table .pct, .cp-leaderboard-table .wk { text-align:right; width:90px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; }
+.cp-leaderboard-table .pts { color:#ffd580; }
+.cp-leaderboard-table .pct { color:#9fd3ff; }
+
+
 
 /* Small responsive container width for content area (optional) */
 .main-container {

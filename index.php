@@ -2,7 +2,7 @@
 <main id="site-content" role="main">
 	<div class="main-container">
 	<section class="cp-leaderboard-top">
-		<?php echo do_shortcode( '[college_picks_leaderboard]' ); ?>
+		<?php echo do_shortcode( '[college_picks_leaderboard week="2" top="6"]' ); ?>
 		<?php if ( is_user_logged_in() ) : ?>
 			<p><a class="button button-primary" href="<?php echo esc_url( home_url( '/make-picks/' ) ); ?>">Make Picks for this Week</a></p>
 		<?php else : ?>
@@ -88,6 +88,10 @@
 	endif;
 	?>
 	</section>
+	<section>
+		<h2>Past Weeks Leaderboards</h2>
+		<?php echo do_shortcode( '[college_picks_leaderboard week="1" top="6"]' ); ?>
+		</section>
 	</div>
 </main>
 <?php get_footer(); ?>

@@ -403,6 +403,7 @@ function cp_get_week_leaderboard( $week = null ) {
 			'correct' => $correct,
 			'total'   => $total,
 			'percent' => $percent,
+
 		);
 	}
 
@@ -435,22 +436,42 @@ if ( ! function_exists( 'cp_leaderboard_shortcode' ) ) {
 		$week = $atts['week'] ?: null;
 		$top  = intval( $atts['top'] );
 		$rows = cp_get_week_leaderboard( $week );
+		/** returns:
+		 * $rows[]  = array(
+		 *  'user_id' => $uid,
+		 *  'name'    => $name,
+		 *  'correct' => $correct,
+		 *  'total'   => $total,
+		 *  'percent' => $percent,
+		 *);
+		 */
 
 		if ( empty( $rows ) ) {
 			return '<div class="cp-leaderboard"><p>No leaderboard data available for this week.</p></div>';
 		}
 
 		ob_start();
-		echo '<div class="cp-leaderboard"><h3>Leaderboard</h3><ol>';
+		// Render as a dark table for better UX
+		echo '<div class="cp-leaderboard" data-week="' . esc_attr( $week ) . '"><h3>Leaderboard</h3>';
+		echo '<div class="cp-leaderboard-wrap"><table class="cp-leaderboard-table">';
+		echo '<thead><tr><th class="rank">Rank</th><th class="entry">Entry</th><th class="wl">W-L</th><th class="pts">PTS</th><th class="pct">PCT</th><th class="wk">WK</th></tr></thead>';
+		echo '<tbody>';
 		$count = 0;
 		foreach ( $rows as $r ) {
 			if ( $count >= $top ) {
 				break;
 			}
 			++$count;
-			printf( '<li>%s — %d correct of %d picks (%s%%)</li>', esc_html( $r['name'] ), intval( $r['correct'] ), intval( $r['total'] ), esc_html( number_format_i18n( $r['percent'], 1 ) ) );
+			$rank = $count;
+			// Build a display for W-L and points if available; fallback to placeholders
+			$wl  = isset( $r['correct'] ) ? esc_html( $r['correct'] ) . '/' . esc_html( $r['total'] ) : '—';
+			$pts = isset( $r['correct'] ) ? intval( $r['correct'] ) : 0;
+			$pct = isset( $r['percent'] ) ? esc_html( number_format_i18n( $r['percent'], 1 ) ) : '0';
+			$wk  = isset( $week ) ? esc_html( $week ) : '—';
+
+			printf( '<tr><td class="rank">%d</td><td class="entry"><a href="#">%s</a></td><td class="wl">%s</td><td class="pts">%d</td><td class="pct">%s</td><td class="wk">%s</td></tr>', esc_html( $rank ), esc_html( $r['name'] ), $wl, $pts, $pct, $wk );
 		}
-		echo '</ol></div>';
+		echo '</tbody></table></div></div>';
 		return ob_get_clean();
 	}
 	// Ensure shortcode is registered once
@@ -919,3 +940,149 @@ function cp_game_render_custom_column( $column, $post_id ) {
 	echo esc_html( $out );
 }
 add_action( 'manage_game_posts_custom_column', 'cp_game_render_custom_column', 10, 2 );
+// --- College Picks Leaderboard Archive & Accumulation Admin Page ---
+add_action( 'admin_menu', 'cp_leaderboard_archive_menu' );
+function cp_leaderboard_archive_menu() {
+	add_menu_page(
+		'Leaderboard Archive',
+		'Leaderboard Archive',
+		'manage_options',
+		'cp-leaderboard-archive',
+		'cp_leaderboard_archive_page',
+		'dashicons-archive',
+		30
+	);
+}
+
+function cp_leaderboard_archive_page() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	// Handle archive action
+	if ( isset( $_POST['cp_archive_leaderboard'] ) ) {
+		cp_archive_weekly_leaderboard();
+		echo '<div class="updated"><p>Weekly leaderboard archived and running tally updated.</p></div>';
+	}
+
+	echo '<div class="wrap">';
+	echo '<h1>Leaderboard Archive & Running Tally</h1>';
+	echo '<form method="post">';
+	echo '<input type="submit" name="cp_archive_leaderboard" class="button button-primary" value="Archive This Week & Update Tally">';
+	echo '</form>';
+
+	// Display current running tally
+	$tally = get_option( 'cp_leaderboard_running_tally', array() );
+	if ( ! empty( $tally ) ) {
+		echo '<h2>Running Tally</h2>';
+		echo '<table class="widefat"><thead><tr><th>User</th><th>Total Points</th></tr></thead><tbody>';
+		foreach ( $tally as $user_id => $points ) {
+			$user_info    = get_userdata( $user_id );
+			$display_name = $user_info ? esc_html( $user_info->display_name ) : 'User ID ' . intval( $user_id );
+			echo '<tr><td>' . $display_name . '</td><td>' . intval( $points ) . '</td></tr>';
+		}
+		echo '</tbody></table>';
+	} else {
+		echo '<p>No running tally yet.</p>';
+	}
+
+	// Display archive
+	$archive = get_option( 'cp_leaderboard_archive', array() );
+	if ( ! empty( $archive ) ) {
+		echo '<h2>Archived Weeks</h2>';
+		foreach ( $archive as $week => $week_data ) {
+			echo '<h3>Week ' . esc_html( $week ) . '</h3>';
+			echo '<table class="widefat"><thead><tr><th>User</th><th>Points</th></tr></thead><tbody>';
+			foreach ( $week_data as $user_id => $points ) {
+				$user_info    = get_userdata( $user_id );
+				$display_name = $user_info ? esc_html( $user_info->display_name ) : 'User ID ' . intval( $user_id );
+				echo '<tr><td>' . $display_name . '</td><td>' . intval( $points ) . '</td></tr>';
+			}
+			echo '</tbody></table>';
+		}
+	}
+	echo '</div>';
+}
+
+/**
+ * Archives the current week's leaderboard and updates the running tally.
+ * Assumes a function cp_get_current_week_leaderboard() returns [user_id => points] for the week.
+ * Assumes a function cp_get_current_week_number() returns the current week number.
+ */
+function cp_archive_weekly_leaderboard() {
+	if ( ! function_exists( 'cp_get_current_week_leaderboard' ) || ! function_exists( 'cp_get_current_week_number' ) ) {
+		return;
+	}
+	$week             = cp_get_current_week_number();
+	$week_leaderboard = cp_get_current_week_leaderboard();
+	if ( empty( $week_leaderboard ) ) {
+		return;
+	}
+
+	// Archive this week
+	$archive          = get_option( 'cp_leaderboard_archive', array() );
+	$archive[ $week ] = $week_leaderboard;
+	update_option( 'cp_leaderboard_archive', $archive );
+
+	// Update running tally
+	$tally = get_option( 'cp_leaderboard_running_tally', array() );
+	foreach ( $week_leaderboard as $user_id => $points ) {
+		if ( ! isset( $tally[ $user_id ] ) ) {
+			$tally[ $user_id ] = 0;
+		}
+		$tally[ $user_id ] += $points;
+	}
+	update_option( 'cp_leaderboard_running_tally', $tally );
+}
+// --- End College Picks Leaderboard Archive & Accumulation ---
+/**
+ * Returns an array of [user_id => points] for the current week leaderboard.
+ * Points = number of correct picks for the week.
+ */
+function cp_get_current_week_leaderboard() {
+	$week = cp_get_current_week_number();
+	if ( empty( $week ) ) {
+		return array();
+	}
+	$rows = cp_get_week_leaderboard( $week ); // $rows[] = [user_id, name, correct, total, percent]
+	$out  = array();
+	foreach ( $rows as $row ) {
+		$out[ $row['user_id'] ] = intval( $row['correct'] );
+	}
+	return $out;
+}
+
+/**
+ * Returns the current week number (latest week with a result).
+ */
+function cp_get_current_week_number() {
+	// Find the latest game with a result and a week set
+	$games_with_result = get_posts(
+		array(
+			'post_type'      => 'game',
+			'posts_per_page' => 1,
+			'meta_query'     => array(
+				array(
+					'key'     => 'result',
+					'compare' => '!=',
+					'value'   => '',
+				),
+				array(
+					'key'     => 'week',
+					'compare' => '!=',
+					'value'   => '',
+				),
+			),
+			'meta_key'       => 'week',
+			'orderby'        => 'meta_value_num',
+			'order'          => 'DESC',
+			'fields'         => 'ids',
+		)
+	);
+	if ( ! empty( $games_with_result ) ) {
+		$latest_game = get_post( $games_with_result[0] );
+		$week        = get_post_meta( $latest_game->ID, 'week', true );
+		return $week;
+	}
+	return null;
+}
