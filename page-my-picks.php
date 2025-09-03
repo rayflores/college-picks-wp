@@ -141,7 +141,8 @@ foreach ( $weeks as $w ) {
 			try {
 				$dt = new DateTime( $kick );
 			} catch ( Exception $e ) {
-				$dt = false; }
+				$dt = false;
+			}
 		}
 		$kick_str    = $dt ? $dt->format( 'D n/j • g:i A' ) : esc_html( $kick );
 		$pick        = isset( $user_picks_by_game[ $gid ] ) ? $user_picks_by_game[ $gid ] : null;
@@ -157,57 +158,60 @@ foreach ( $weeks as $w ) {
 		$away_team_obj = get_post( $away_team_id );
 		$home_logo     = $home_team_obj ? get_the_post_thumbnail_url( $home_team_obj->ID, 'thumbnail' ) : '';
 		$away_logo     = $away_team_obj ? get_the_post_thumbnail_url( $away_team_obj->ID, 'thumbnail' ) : '';
-		$home_rank     = $home_team_obj ? get_post_meta( $home_team_obj->ID, 'cp_team_rank', true ) : '';
-		$away_rank     = $away_team_obj ? get_post_meta( $away_team_obj->ID, 'cp_team_rank', true ) : '';
+		$home_rank     = $home_team_obj ? get_post_meta( $home_team_obj->ID, 'cp_team_rank', true ) : 'NR';
+		$away_rank     = $away_team_obj ? get_post_meta( $away_team_obj->ID, 'cp_team_rank', true ) : 'NR';
 
-		echo '<div class="card mb-4 shadow-sm bg-dark ' . $card_border . '" style="border-width:3px; border-radius:20px;">';
+		echo '<div class="card mb-4 shadow-sm bg-dark rounded-4 ' . $card_border . '" style="border-width:4px;">';
 		echo '<div class="card-body p-0">';
 		// Top row: kickoff and result
 		echo '<div class="d-flex justify-content-between align-items-center px-4 pt-3">';
 		echo '<span class="badge bg-secondary fs-6 px-3 py-2">' . esc_html( $kick_str ) . '</span>';
 		if ( $result ) {
 			$res_label = $result === 'home' ? $home : ( $result === 'away' ? $away : 'Tie' );
-			echo '<span class="badge bg-info fs-6 px-3 py-2">Final: ' . esc_html( $res_label ) . '</span>';
+			echo '<span class="badge bg-secondary fs-6 px-3 py-2">Winner: ' . esc_html( $res_label ) . '</span>';
 		}
 		echo '</div>';
-		// Main row: teams
-		echo '<div class="d-flex align-items-center justify-content-between px-4 py-3">';
+		// Main row: two team blocks, single row, centered vertically
+		echo '<div class="d-flex align-items-stretch justify-content-between px-4 py-4 col-12">';
 		// Home team block
-		echo '<div class="d-flex align-items-center" style="min-width:200px;">';
+		echo '<div class="card col-5 rounded-4">';
 		if ( $home_logo ) {
-			echo '<img src="' . esc_url( $home_logo ) . '" alt="' . esc_attr( $home ) . ' logo" style="width:60px; height:60px; object-fit:contain; background:#23272a; border-radius:10px; margin-right:18px;">';
+			echo '<img class="card-img-top" src="' . esc_url( $home_logo ) . '" alt="' . esc_attr( $home ) . ' logo" style="width:64px; height:64px; object-fit:contain; background:#ffffff; margin-right:auto;margin-left:auto;">';
 		} else {
-			echo '<div style="width:60px; height:60px; background:#333; border-radius:10px; margin-right:18px;"></div>';
+			echo '<div style="width:64px; height:64px; background:#333; border-radius:12px; margin-right:18px;"></div>';
 		}
-		echo '<div>';
-		echo '<div class="fw-bold text-light" style="font-size:1.3rem;">' . esc_html( $home ) . '</div>';
-		if ( $home_rank ) {
-			echo '<div class="text-info small">Rank: ' . intval( $home_rank ) . '</div>';
+		echo '<div class="card-body d-flex flex-column align-items-center border-top">';
+		echo '<div class="card-title fw-bold text-dark text-center" style="font-size:1.4rem;">' . esc_html( $home ) . '</div>';
+		if ( $home_rank > 0 ) {
+			echo '<div class="text-info small text-center">Rank: ' . intval( $home_rank ) . '</div>';
+		} else {
+			echo '<div class="text-info small text-center">Rank: NR</div>';
 		}
-		echo '</div>';
 		echo '</div>';
 		// Your Pick badge (home)
 		if ( $pick_choice === 'home' ) {
-			echo '<span class="badge bg-primary ms-3">Your Pick</span>';
-		}
-		// Spacer
-		echo '<div class="flex-grow-1"></div>';
-		// Away team block
-		if ( $pick_choice === 'away' ) {
-			echo '<span class="badge bg-primary me-3">Your Pick</span>';
-		}
-		echo '<div class="d-flex align-items-center justify-content-end" style="min-width:200px;">';
-		if ( $away_logo ) {
-			echo '<img src="' . esc_url( $away_logo ) . '" alt="' . esc_attr( $away ) . ' logo" style="width:60px; height:60px; object-fit:contain; background:#23272a; border-radius:10px; margin-right:18px;">';
-		} else {
-			echo '<div style="width:60px; height:60px; background:#333; border-radius:10px; margin-right:18px;"></div>';
-		}
-		echo '<div>';
-		echo '<div class="fw-bold text-light" style="font-size:1.3rem;">' . esc_html( $away ) . '</div>';
-		if ( $away_rank ) {
-			echo '<div class="text-info small">Rank: ' . intval( $away_rank ) . '</div>';
+			echo '<div class="card-footer badge bg-success rounded-bottom-4">Your Pick</div>';
 		}
 		echo '</div>';
+		// Away team block
+		echo '<div class="card col-5 rounded-4">';
+		if ( $away_logo ) {
+			echo '<img class="card-img-top" src="' . esc_url( $away_logo ) . '" alt="' . esc_attr( $away ) . ' logo" style="width:64px; height:64px; object-fit:contain; background:#23272a; border-radius:12px; margin-right:auto;margin-left:auto;">';
+		} else {
+			echo '<div style="width:64px; height:64px; background:#333; border-radius:12px; margin-right:18px;"></div>';
+		}
+		echo '<div class="card-body">';
+		echo '<div class="card-title fw-bold text-dark text-center" style="font-size:1.4rem;">' . esc_html( $away ) . '</div>';
+		if ( $away_rank > 0 ) {
+			echo '<div class="text-info small text-center">Rank: ' . intval( $away_rank ) . '</div>';
+		} else {
+			echo '<div class="text-info small text-center">Rank: NR</div>';
+		}
+
+		echo '</div>';
+		if ( $pick_choice === 'away' ) {
+			echo '<div class="card-footer badge bg-success rounded-bottom-4">Your Pick</div>';
+		}
 		echo '</div>';
 		echo '</div>';
 		// Correct/Incorrect icon (optional, can be moved)
@@ -221,28 +225,7 @@ foreach ( $weeks as $w ) {
 		echo '</div>';
 		echo '</div>';
 	}
-		echo '<div class="me-3" style="width:48px; height:48px; background:#333; border-radius:8px;"></div>'; // Placeholder for logo
-		echo '<div class="flex-grow-1">';
-		echo '<div class="fw-bold text-light" style="font-size:1.1rem;">' . esc_html( $away ) . '</div>';
-		echo '<div class="text-muted small">(Away)</div>';
-		// Optionally: record/odds here
-		echo '</div>';
-	if ( $pick_choice === 'away' ) {
-		echo '<span class="badge bg-primary ms-2">Your Pick</span>';
-	}
-		echo '</div>';
-		echo '</div>';
-		echo '</div>'; // row
-		// Correct/Incorrect icon
-	if ( $pick && $result ) {
-		if ( $is_correct ) {
-			echo '<div class="mt-3 text-success fs-2"><i class="bi bi-check-circle-fill"></i></div>';
-		} elseif ( $is_wrong ) {
-			echo '<div class="mt-3 text-danger fs-2"><i class="bi bi-x-circle-fill"></i></div>';
-		}
-	}
-		echo '</div>'; // card-body
-		echo '</div>'; // card
+
 	echo '</div>'; // cp-week-card
 }
 
@@ -276,13 +259,10 @@ if ( $active_week ) {
 	}
 }
 ?>
-<div class="position - fixed bottom - 0 start - 0 w - 100 bg - dark shadow - lg py - 3 px - 2' style='z - index:1050;
-border - radius:18px 18px 0 0;'>
-	<div class='container - fluid d - flex align - items - center justify - content - between'>
+<div class="position-fixed bottom-0 start-0 w-100 bg-dark shadow-lg py-3 px-2" style="z-index:1050; border-radius:18px 18px 0 0;">
+	<div class='container-fluid d-flex align-items-center justify-content-between'>
 		<div>
-			<a class='btn btn - primary btn - lg' href=' < ? php echo esc_url( get_permalink( get_page_by_path( 'make-picks' ) ) );
-?>
-">Submit Your Picks</a>
+			<a class='btn btn-primary btn-lg' href='<?php echo esc_url( get_permalink( get_page_by_path( 'make-picks' ) ) ); ?>'>Submit Your Picks</a>
 		</div>
 		<div class="cp-progress-wrap text-end">
 			<div class="small text-light mb-1"><?php echo intval( $progress_made ); ?> / <?php echo intval( $progress_total ); ?> Picks Made</div>
