@@ -78,6 +78,9 @@ function cp_enqueue_assets() {
 	// Bootstrap 5 CSS from CDN.
 	wp_enqueue_style( 'cp-bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', array(), '5.3.2' );
 
+	// Bootstrap Icons
+	wp_enqueue_style( 'cp-bootstrap-icons', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css', array(), '1.13.1' );
+
 	// Theme stylesheet depends on Bootstrap so it can override styles.
 	$theme_style_ver = file_exists( get_stylesheet_directory() . '/style.css' ) ? filemtime( get_stylesheet_directory() . '/style.css' ) : false;
 	wp_enqueue_style( 'college-picks-style', get_stylesheet_uri(), array( 'cp-bootstrap-css' ), $theme_style_ver );
@@ -1162,6 +1165,8 @@ function cp_team_rank_metabox_cb( $post ) {
 	echo '<input type="number" min="1" step="1" name="cp_team_rank_field" id="cp_team_rank_field" value="' . esc_attr( $rank ) . '" style="width:100%;" />';
 	echo '<label for="cp_team_background_field">Background Color:</label>';
 	echo '<input type="text" name="cp_team_background_field" id="cp_team_background_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_background', true ) ) . '" style="width:100%;" />';
+	echo '<label for="cp_team_record_field">Team Record:</label>';
+	echo '<input type="text" name="cp_team_record_field" id="cp_team_record_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_record', true ) ) . '" style="width:100%;" />';
 }
 
 function cp_save_team_rank_meta( $post_id ) {
@@ -1170,6 +1175,9 @@ function cp_save_team_rank_meta( $post_id ) {
 	}
 	if ( isset( $_POST['cp_team_background_field'] ) ) {
 		update_post_meta( $post_id, 'cp_team_background', sanitize_text_field( $_POST['cp_team_background_field'] ) );
+	}
+	if ( isset( $_POST['cp_team_record_field'] ) ) {
+		update_post_meta( $post_id, 'cp_team_record', sanitize_text_field( $_POST['cp_team_record_field'] ) );
 	}
 }
 add_action( 'save_post_team', 'cp_save_team_rank_meta' );
