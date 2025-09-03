@@ -163,14 +163,35 @@ function cp_render_game_metabox( $post ) {
 	$kick   = get_post_meta( $post->ID, 'kickoff_time', true );
 	$week   = get_post_meta( $post->ID, 'week', true );
 	$result = get_post_meta( $post->ID, 'result', true );
+
+	// Fetch teams for dropdowns
+	$teams = get_posts(
+		array(
+			'post_type'      => 'team',
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+			'post_status'    => 'publish',
+		)
+	);
 	?>
 	<p>
 		<label>Home Team:<br>
-		<input type="text" name="home_team" value="<?php echo esc_attr( $home ); ?>"></label>
+		<select name="home_team">
+			<option value="">-- Select Team --</option>
+			<?php foreach ( $teams as $team ) : ?>
+				<option value="<?php echo esc_attr( $team->post_title ); ?>" <?php selected( $home, $team->post_title ); ?>><?php echo esc_html( $team->post_title ); ?></option>
+			<?php endforeach; ?>
+		</select></label>
 	</p>
 	<p>
 		<label>Away Team:<br>
-		<input type="text" name="away_team" value="<?php echo esc_attr( $away ); ?>"></label>
+		<select name="away_team">
+			<option value="">-- Select Team --</option>
+			<?php foreach ( $teams as $team ) : ?>
+				<option value="<?php echo esc_attr( $team->post_title ); ?>" <?php selected( $away, $team->post_title ); ?>><?php echo esc_html( $team->post_title ); ?></option>
+			<?php endforeach; ?>
+		</select></label>
 	</p>
 	<p>
 		<label>Kickoff Time (YYYY-MM-DD HH:MM):<br>
@@ -1087,3 +1108,98 @@ function cp_get_current_week_number() {
 	}
 	return null;
 }
+/**
+ * Register custom post type: Team
+ */
+function cp_register_cpt_team() {
+	$labels = array(
+		'name'               => 'Teams',
+		'singular_name'      => 'Team',
+		'add_new'            => 'Add New',
+		'add_new_item'       => 'Add New Team',
+		'edit_item'          => 'Edit Team',
+		'new_item'           => 'New Team',
+		'view_item'          => 'View Team',
+		'search_items'       => 'Search Teams',
+		'not_found'          => 'No teams found',
+		'not_found_in_trash' => 'No teams found in Trash',
+		'menu_name'          => 'Teams',
+	);
+	$args   = array(
+		'labels'        => $labels,
+		'public'        => true,
+		'show_ui'       => true,
+		'show_in_menu'  => true,
+		'menu_position' => 22,
+		'menu_icon'     => 'dashicons-groups',
+		'supports'      => array( 'title', 'thumbnail', 'custom-fields', 'revisions' ),
+		'has_archive'   => false,
+		'show_in_rest'  => true,
+	);
+	register_post_type( 'team', $args );
+}
+add_action( 'init', 'cp_register_cpt_team' );
+add_theme_support( 'post-thumbnails' );
+
+/**
+ * Add Rank meta box to Team post type
+ */
+function cp_team_rank_metabox() {
+	add_meta_box(
+		'cp_team_rank',
+		'Team Rank',
+		'cp_team_rank_metabox_cb',
+		'team',
+		'normal',
+		'default'
+	);
+}
+add_action( 'add_meta_boxes', 'cp_team_rank_metabox' );
+
+function cp_team_rank_metabox_cb( $post ) {
+	$rank = get_post_meta( $post->ID, 'cp_team_rank', true );
+	echo '<label for="cp_team_rank_field">Rank (number or leave blank):</label>';
+	echo '<input type="number" min="1" step="1" name="cp_team_rank_field" id="cp_team_rank_field" value="' . esc_attr( $rank ) . '" style="width:100%;" />';
+	echo '<label for="cp_team_background_field">Background Color:</label>';
+	echo '<input type="text" name="cp_team_background_field" id="cp_team_background_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_background', true ) ) . '" style="width:100%;" />';
+}
+
+function cp_save_team_rank_meta( $post_id ) {
+	if ( isset( $_POST['cp_team_rank_field'] ) ) {
+		update_post_meta( $post_id, 'cp_team_rank', intval( $_POST['cp_team_rank_field'] ) );
+	}
+	if ( isset( $_POST['cp_team_background_field'] ) ) {
+		update_post_meta( $post_id, 'cp_team_background', sanitize_text_field( $_POST['cp_team_background_field'] ) );
+	}
+}
+add_action( 'save_post_team', 'cp_save_team_rank_meta' );
+/**
+ * Add custom admin column for Team Rank
+ */
+function cp_team_columns( $columns ) {
+	$columns['cp_team_rank'] = 'Rank';
+	// place before date
+	$date_column = 'date';
+	if ( isset( $columns[ $date_column ] ) ) {
+		$new_columns = array();
+		foreach ( $columns as $key => $value ) {
+			if ( $key === $date_column ) {
+				$new_columns['cp_team_rank'] = 'Rank';
+			}
+			$new_columns[ $key ] = $value;
+		}
+		return $new_columns;
+	}
+	return $columns;
+}
+add_filter( 'manage_team_posts_columns', 'cp_team_columns' );
+
+function cp_team_column_content( $column, $post_id ) {
+	if ( 'cp_team_rank' === $column ) {
+		$rank = get_post_meta( $post_id, 'cp_team_rank', true );
+		if ( $rank ) {
+			echo esc_html( $rank );
+		}
+	}
+}
+add_action( 'manage_team_posts_custom_column', 'cp_team_column_content', 10, 2 );
