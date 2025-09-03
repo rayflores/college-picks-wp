@@ -196,7 +196,7 @@ foreach ( $weeks as $w ) {
 		// Away team block
 		echo '<div class="card col-5 rounded-4">';
 		if ( $away_logo ) {
-			echo '<img class="card-img-top" src="' . esc_url( $away_logo ) . '" alt="' . esc_attr( $away ) . ' logo" style="width:64px; height:64px; object-fit:contain; background:#23272a; border-radius:12px; margin-right:auto;margin-left:auto;">';
+			echo '<img class="card-img-top" src="' . esc_url( $away_logo ) . '" alt="' . esc_attr( $away ) . ' logo" style="width:64px; height:64px; object-fit:contain; background:#ffffff; margin-right:auto;margin-left:auto;">';
 		} else {
 			echo '<div style="width:64px; height:64px; background:#333; border-radius:12px; margin-right:18px;"></div>';
 		}
