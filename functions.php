@@ -1211,3 +1211,9 @@ function cp_team_column_content( $column, $post_id ) {
 	}
 }
 add_action( 'manage_team_posts_custom_column', 'cp_team_column_content', 10, 2 );
+// sort by rank
+function cp_team_sortable_columns( $columns ) {
+	$columns['cp_team_rank'] = 'cp_team_rank';
+	return $columns;
+}
+add_filter( 'manage_edit-team_sortable_columns', 'cp_team_sortable_columns' );
