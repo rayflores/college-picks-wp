@@ -169,10 +169,7 @@ foreach ( $weeks as $w ) {
 		// Top row: kickoff and result
 		echo '<div class="d-flex justify-content-between align-items-center px-4 pt-3">';
 		echo '<span class="badge bg-secondary fs-6 px-3 py-2">' . esc_html( $kick_str ) . '</span>';
-		if ( $result ) {
-			$res_label = $result === 'home' ? $home : ( $result === 'away' ? $away : 'Tie' );
-			echo '<span class="badge bg-secondary fs-6 px-3 py-2">Winner: ' . esc_html( $res_label ) . '</span>';
-		}
+
 		// Correct/Incorrect icon (optional, can be moved)
 		if ( $pick && $result ) {
 			if ( $is_correct ) {
@@ -268,8 +265,9 @@ if ( $active_week ) {
 		$progress_made = is_array( $user_picks ) ? count( $user_picks ) : 0;
 	}
 }
+// Do we need to show the progress bar here as this is the history page for my picks?
 ?>
-<div class="position-fixed bottom-0 start-0 w-100 bg-dark shadow-lg py-3 px-2" style="z-index:1050; border-radius:18px 18px 0 0;">
+<!-- <div class="position-fixed bottom-0 start-0 w-100 bg-dark shadow-lg py-3 px-2" style="z-index:1050; border-radius:18px 18px 0 0;">
 	<div class='container-fluid d-flex align-items-center justify-content-between'>
 		<div>
 			<a class='btn btn-primary btn-lg' href='<?php echo esc_url( get_permalink( get_page_by_path( 'make-picks' ) ) ); ?>'>Submit Your Picks</a>
@@ -281,5 +279,5 @@ if ( $active_week ) {
 			</div>
 		</div>
 	</div>
-</div>
+</div> -->
 <?php get_footer(); ?>
