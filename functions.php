@@ -99,7 +99,22 @@ function cp_enqueue_assets() {
 	// Theme UI behaviors
 	wp_enqueue_script( 'cp-ui', get_stylesheet_directory_uri() . '/assets/js/cp-ui.js', array(), filemtime( get_stylesheet_directory() . '/assets/js/cp-ui.js' ), true );
 }
+
 add_action( 'wp_enqueue_scripts', 'cp_enqueue_assets' );
+
+// Enqueue cp-make-picks.js only on the Make Picks page template
+function cp_enqueue_make_picks_script() {
+	if ( is_page_template( 'page-make-picks.php' ) ) {
+		wp_enqueue_script(
+			'cp-make-picks',
+			get_stylesheet_directory_uri() . '/assets/js/cp-make-picks.js',
+			array(),
+			filemtime( get_stylesheet_directory() . '/assets/js/cp-make-picks.js' ),
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'cp_enqueue_make_picks_script' );
 
 /**
  * Add small admin stylesheet for metabox input widths.
