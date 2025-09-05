@@ -1,5 +1,13 @@
 <?php
-// Basic theme setup and registration of custom post types + meta boxes
+/**
+ * College Picks Theme Functions
+ *
+ * This file contains the core functions for the College Picks theme.
+ *
+ * @package CollegePicks
+ */
+
+// Basic theme setup and registration of custom post types + meta boxes.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -1162,7 +1170,7 @@ add_action( 'add_meta_boxes', 'cp_team_rank_metabox' );
 function cp_team_rank_metabox_cb( $post ) {
 	$rank = get_post_meta( $post->ID, 'cp_team_rank', true );
 	echo '<label for="cp_team_rank_field">Rank (number or leave blank):</label>';
-	echo '<input type="number" min="1" step="1" name="cp_team_rank_field" id="cp_team_rank_field" value="' . esc_attr( $rank ) . '" style="width:100%;" />';
+	echo '<input type="text" name="cp_team_rank_field" id="cp_team_rank_field" value="' . $rank . '" style="width:100%;" />';
 	echo '<label for="cp_team_background_field">Background Color:</label>';
 	echo '<input type="text" name="cp_team_background_field" id="cp_team_background_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_background', true ) ) . '" style="width:100%;" />';
 	echo '<label for="cp_team_record_field">Team Record:</label>';
@@ -1171,7 +1179,7 @@ function cp_team_rank_metabox_cb( $post ) {
 
 function cp_save_team_rank_meta( $post_id ) {
 	if ( isset( $_POST['cp_team_rank_field'] ) ) {
-		update_post_meta( $post_id, 'cp_team_rank', intval( $_POST['cp_team_rank_field'] ) );
+		update_post_meta( $post_id, 'cp_team_rank', $_POST['cp_team_rank_field'] ? intval( $_POST['cp_team_rank_field'] ) : '' );
 	}
 	if ( isset( $_POST['cp_team_background_field'] ) ) {
 		update_post_meta( $post_id, 'cp_team_background', sanitize_text_field( $_POST['cp_team_background_field'] ) );
@@ -1183,10 +1191,13 @@ function cp_save_team_rank_meta( $post_id ) {
 add_action( 'save_post_team', 'cp_save_team_rank_meta' );
 /**
  * Add custom admin column for Team Rank
+ *
+ * @param array $columns Existing columns.
+ * @return array Modified columns.
  */
 function cp_team_columns( $columns ) {
 	$columns['cp_team_rank'] = 'Rank';
-	// place before date
+	// place before date.
 	$date_column = 'date';
 	if ( isset( $columns[ $date_column ] ) ) {
 		$new_columns = array();
@@ -1201,7 +1212,12 @@ function cp_team_columns( $columns ) {
 	return $columns;
 }
 add_filter( 'manage_team_posts_columns', 'cp_team_columns' );
-
+/**
+ * Custom content for Team Rank column.
+ *
+ * @param string $column  The column name.
+ * @param int    $post_id The post ID.
+ */
 function cp_team_column_content( $column, $post_id ) {
 	if ( 'cp_team_rank' === $column ) {
 		$rank = get_post_meta( $post_id, 'cp_team_rank', true );
@@ -1211,9 +1227,15 @@ function cp_team_column_content( $column, $post_id ) {
 	}
 }
 add_action( 'manage_team_posts_custom_column', 'cp_team_column_content', 10, 2 );
-// sort by rank
+/**
+ * Custom content for Team Rank column.
+ *
+ * @param string $columns  The column name.
+ */
 function cp_team_sortable_columns( $columns ) {
 	$columns['cp_team_rank'] = 'cp_team_rank';
 	return $columns;
 }
 add_filter( 'manage_edit-team_sortable_columns', 'cp_team_sortable_columns' );
+// Include ESPN Rankings integration.
+require_once get_template_directory() . '/espn-rankings.php';
