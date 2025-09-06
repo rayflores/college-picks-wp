@@ -66,7 +66,7 @@ if ( ! empty( $teams ) ) :
 					<td><?php echo isset( $team['rank'] ) ? esc_html( $team['rank'] ) : ''; ?></td>
 					<td class="logo-cell" style="--bs-table-bg-type:#<?php echo esc_attr( $team['team_color'] ); ?>!important;">
 						<?php if ( ! empty( $team['team_logo'] ) ) : ?>
-							<img src="<?php echo esc_url( $team['team_logo'] ); ?>" alt="<?php echo esc_attr( $team['team_name'] ); ?> logo" style="height:32px;vertical-align:middle;" />
+							<img src="<?php echo esc_url( $team['team_logo'] ); ?>" alt="<?php echo esc_attr( $team['team_name'] ); ?> logo" style="height:32px;vertical-align:middle;background:#fff;border-radius:4px;" />
 						<?php endif; ?>
 					</td>
 					<td><?php echo esc_html( $team['team_name'] ); ?></td>
