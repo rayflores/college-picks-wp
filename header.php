@@ -15,7 +15,7 @@
 	.cp-pick-form { margin-top:8px; }
 	</style>
 </head>
-<body <?php body_class(); ?>>
+<body <?php body_class( 'bg-dark text-light' ); ?>>
 <header class="site-header">
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
 		<div class="container-fluid">

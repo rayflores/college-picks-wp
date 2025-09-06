@@ -39,7 +39,7 @@ $teams     = cp_get_data_from_cache( $cache_key );
 <div class="container rankings-page my-4">
 	<h1 class="mb-4">AP Top 25 Rankings</h1>
 	<div class="table-responsive">
-	<table class="table table-striped table-bordered align-middle">
+	<table class="table table-dark table-striped table-bordered align-middle">
 		<thead class="table-dark">
 			<tr>
 				<th>Rank</th>
@@ -55,7 +55,7 @@ $teams     = cp_get_data_from_cache( $cache_key );
 				<th>Record</th>
 			</tr>
 		</thead>
-		<tbody>
+		<tbody class="table-dark">
 		<?php
 		if ( ! empty( $teams ) ) :
 			foreach ( $teams as $team ) :
