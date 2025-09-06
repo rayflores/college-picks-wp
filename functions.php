@@ -1110,11 +1110,7 @@ function cp_get_current_week_number() {
 			'post_type'      => 'game',
 			'posts_per_page' => 1,
 			'meta_query'     => array(
-				array(
-					'key'     => 'result',
-					'compare' => '!=',
-					'value'   => '',
-				),
+
 				array(
 					'key'     => 'week',
 					'compare' => '!=',
