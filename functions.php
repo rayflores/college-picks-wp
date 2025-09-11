@@ -1186,6 +1186,8 @@ function cp_team_rank_metabox_cb( $post ) {
 	echo '<input type="text" name="cp_team_background_field" id="cp_team_background_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_background', true ) ) . '" style="width:100%;" />';
 	echo '<label for="cp_team_record_field">Team Record:</label>';
 	echo '<input type="text" name="cp_team_record_field" id="cp_team_record_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_record', true ) ) . '" style="width:100%;" />';
+	echo '<label for="cp_team_team_id_field">Team ID:</label>';
+	echo '<input type="text" name="cp_team_team_id_field" id="cp_team_team_id_field" value="' . esc_attr( get_post_meta( $post->ID, 'cp_team_team_id', true ) ) . '" style="width:100%;" />';
 }
 
 function cp_save_team_rank_meta( $post_id ) {
@@ -1198,8 +1200,12 @@ function cp_save_team_rank_meta( $post_id ) {
 	if ( isset( $_POST['cp_team_record_field'] ) ) {
 		update_post_meta( $post_id, 'cp_team_record', sanitize_text_field( $_POST['cp_team_record_field'] ) );
 	}
+	if ( isset( $_POST['cp_team_team_id_field'] ) ) {
+		update_post_meta( $post_id, 'cp_team_team_id', sanitize_text_field( $_POST['cp_team_team_id_field'] ) );
+	}
 }
 add_action( 'save_post_team', 'cp_save_team_rank_meta' );
+
 /**
  * Add custom admin column for Team Rank
  *
@@ -1248,5 +1254,76 @@ function cp_team_sortable_columns( $columns ) {
 	return $columns;
 }
 add_filter( 'manage_edit-team_sortable_columns', 'cp_team_sortable_columns' );
+
+/**
+ * Update cp_team_rank for all teams based on the cached AP Top 25 rankings.
+ * Matches by team_id (from cache) to cp_team_team_id (post meta).
+ */
+function cp_update_team_ranks_from_cache() {
+	$cache_key = 'cp_ap_top_25_rankings_results';
+	$rankings  = cp_get_data_from_cache( $cache_key );
+	if ( empty( $rankings ) ) {
+		return;
+	}
+	$args       = array(
+		'post_type'      => 'team',
+		'posts_per_page' => -1,
+		'post_status'    => 'any',
+		'meta_query'     => array(
+			array(
+				'key'     => 'cp_team_team_id',
+				'compare' => 'EXISTS',
+			),
+		),
+		'fields'         => 'ids',
+	);
+	$team_posts = get_posts( $args );
+	foreach ( $team_posts as $post_id ) {
+		$team_id = get_post_meta( $post_id, 'cp_team_team_id', true );
+		if ( ! $team_id ) {
+			continue;
+		}
+		foreach ( $rankings as $row ) {
+			if ( isset( $row['team_id'] ) && (string) $row['team_id'] === (string) $team_id ) {
+				update_post_meta( $post_id, 'cp_team_rank', isset( $row['rank'] ) ? intval( $row['rank'] ) : '' );
+				break;
+			}
+		}
+	}
+}
+// Add a bulk action to update team ranks from cache on the Team list page
+add_filter(
+	'bulk_actions-edit-team',
+	function ( $bulk_actions ) {
+		$bulk_actions['cp_update_team_ranks'] = 'Update Team Ranks';
+		return $bulk_actions;
+	}
+);
+
+// Handle the bulk action
+add_filter(
+	'handle_bulk_actions-edit-team',
+	function ( $redirect_to, $doaction, $post_ids ) {
+		if ( $doaction === 'cp_update_team_ranks' ) {
+			if ( current_user_can( 'manage_options' ) ) {
+				cp_update_team_ranks_from_cache();
+				$redirect_to = add_query_arg( 'cp_team_ranks_updated', '1', $redirect_to );
+			}
+		}
+		return $redirect_to;
+	},
+	10,
+	3
+);
+
+// Show admin notice after bulk action
+add_action(
+	'admin_notices',
+	function () {
+		if ( isset( $_GET['cp_team_ranks_updated'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>Team ranks updated from AP Top 25 cache.</p></div>';
+		}
+	}
+);
 // Include ESPN Rankings integration.
 require_once get_template_directory() . '/espn-rankings.php';
