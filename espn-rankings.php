@@ -284,7 +284,7 @@ function cp_ap_top_25_admin_page() {
 		// Delete cache.
 		wp_cache_delete( $cache_key, 'college_picks' );
 		// Truncate table.
-		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %s', $table_name ) );
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 		echo '<div class="notice notice-success is-dismissible"><p>Cache cleared and rankings table truncated.</p></div>';
 	}
 
