@@ -206,6 +206,8 @@ function cp_schedule_ap_top_25_cron() {
 }
 add_action( 'wp', 'cp_schedule_ap_top_25_cron' );
 
+
+
 add_filter(
 	'cron_schedules',
 	function ( $schedules ) {
@@ -274,21 +276,30 @@ function cp_render_trend_icon( $trend ) {
  * Render the AP Top 25 admin page.
  */
 function cp_ap_top_25_admin_page() {
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'ap_top_25_rankings';
-	$cache_key  = 'cp_ap_top_25_rankings_results';
-	$results    = cp_get_data_from_cache( $cache_key );
-	echo '<div class="wrap"><h1>AP Top 25 Rankings</h1>';
-	if ( empty( $results ) ) {
-		echo '<p>No rankings data found.</p>';
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'ap_top_25_rankings';
+		$cache_key  = 'cp_ap_top_25_rankings_results';
+		// Handle cache clear action.
+	if ( isset( $_POST['cp_clear_ap_top_25_cache'] ) && check_admin_referer( 'cp_clear_ap_top_25_cache_action', 'cp_clear_ap_top_25_cache_nonce' ) ) {
+		// Delete cache.
+		wp_cache_delete( $cache_key, 'college_picks' );
+		// Truncate table.
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %s', $table_name ) );
+		echo '<div class="notice notice-success is-dismissible"><p>Cache cleared and rankings table truncated.</p></div>';
+	}
+
+		$results = cp_get_data_from_cache( $cache_key );
+		echo '<div class="wrap"><h1>AP Top 25 Rankings</h1>';
+		// Cache clear button form
+		echo '<form method="post" style="margin-bottom:16px;display:inline-block;">';
+		wp_nonce_field( 'cp_clear_ap_top_25_cache_action', 'cp_clear_ap_top_25_cache_nonce' );
+		echo '<button type="submit" class="button button-secondary" name="cp_clear_ap_top_25_cache" value="1" onclick="return confirm(\'Are you sure you want to clear the cache and truncate the table?\');">Clear Cache & Truncate Table</button>';
+		echo '</form>';
 		echo '<button class="button" id="fetch-ap-top-25">Fetch AP Top 25</button>';
 		echo '<div id="ap-top-25-status" style="margin-top:10px;"></div>';
-		echo '</div>';
-		return;
-	}
-	echo '<table class="widefat fixed striped"><thead><tr>';
-	echo '<th>Rank</th><th>Logo</th><th>Team Name</th><th>Abbr</th><th>Mascot Name</th><th>Team ID</th><th>Location</th><th>Color</th><th>Points</th><th>Trend</th><th>Record</th><th>Week</th><th>Season</th>';
-	echo '</tr></thead><tbody>';
+		echo '<table class="widefat fixed striped"><thead><tr>';
+		echo '<th>Rank</th><th>Logo</th><th>Team Name</th><th>Abbr</th><th>Mascot Name</th><th>Team ID</th><th>Location</th><th>Color</th><th>Points</th><th>Trend</th><th>Record</th><th>Week</th><th>Season</th>';
+		echo '</tr></thead><tbody>';
 	foreach ( $results as $row ) {
 		echo '<tr>';
 		echo '<td>' . esc_html( $row['rank'] ) . '</td>';
@@ -310,7 +321,5 @@ function cp_ap_top_25_admin_page() {
 		echo '<td>' . esc_html( $row['season'] ) . '</td>';
 		echo '</tr>';
 	}
-	echo '</tbody></table></div>';
-	echo '<button class="button" id="fetch-ap-top-25">Fetch AP Top 25</button>';
-		echo '<div id="ap-top-25-status" style="margin-top:10px;"></div>';
+		echo '</tbody></table></div>';
 }
