@@ -25,6 +25,9 @@ $all_week_games = get_posts(
 	array(
 		'post_type'      => 'game',
 		'posts_per_page' => -1,
+		'order'          => 'ASC',
+		'orderby'        => 'meta_value',
+		'meta_key'       => 'kickoff_time',
 		'meta_query'     => array(
 			'relation' => 'AND',
 			array(
