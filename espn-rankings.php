@@ -143,6 +143,7 @@ add_action( 'admin_init', 'cp_create_rankings_table' );
 function cp_save_ap_top_25_rankings( $teams, $week = null, $season = null ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'ap_top_25_rankings';
+	update_option( 'cp_current_week', $week );
 	foreach ( $teams as $team ) {
 		$wpdb->replace(
 			$table_name,

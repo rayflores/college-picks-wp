@@ -18,7 +18,7 @@ if ( ! is_user_logged_in() ) {
 }
 
 $current_user_id = get_current_user_id();
-$week            = 2; // show picks for week 2 by default. You can modify this as needed.
+$week            = get_option( 'cp_current_week' );
 
 // pull games for this week that have not started and have no result yet.
 $all_week_games = get_posts(
@@ -51,7 +51,7 @@ $all_week_games = get_posts(
 $games = $all_week_games;
 ?>
 <div class="bg-dark rounded-4 shadow-sm p-4">
-	<h1 class="text-light mb-4">Make Your Picks</h1>
+	<h1 class="text-light mb-4">Make Your Picks for week <?php echo esc_html( $week ); ?></h1>
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<?php wp_nonce_field( 'cp_submit_picks', 'cp_submit_picks_nonce' ); ?>
 		<input type="hidden" name="action" value="submit_picks_bulk">
