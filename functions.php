@@ -859,6 +859,7 @@ function cp_update_team_ranks_from_cache() {
 		foreach ( $rankings as $row ) {
 			if ( isset( $row['team_id'] ) && (string) $row['team_id'] === (string) $team_id ) {
 				update_post_meta( $post_id, 'cp_team_rank', isset( $row['rank'] ) ? intval( $row['rank'] ) : '' );
+				update_post_meta( $post_id, 'cp_team_record', isset( $row['record'] ) ? sanitize_text_field( $row['record'] ) : '' );
 				break;
 			}
 		}
