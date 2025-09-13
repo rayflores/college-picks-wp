@@ -230,14 +230,16 @@ add_action( 'save_post_team', 'cp_save_team_rank_meta' );
  * @return array Modified columns.
  */
 function cp_team_columns( $columns ) {
-	$columns['cp_team_rank'] = 'Rank';
+	$columns['cp_team_rank']    = 'Rank';
+	$columns['cp_team_team_id'] = 'Team ID';
 	// place before date.
 	$date_column = 'date';
 	if ( isset( $columns[ $date_column ] ) ) {
 		$new_columns = array();
 		foreach ( $columns as $key => $value ) {
 			if ( $key === $date_column ) {
-				$new_columns['cp_team_rank'] = 'Rank';
+				$new_columns['cp_team_rank']    = 'Rank';
+				$new_columns['cp_team_team_id'] = 'Team ID';
 			}
 			$new_columns[ $key ] = $value;
 		}
@@ -255,22 +257,43 @@ add_filter( 'manage_team_posts_columns', 'cp_team_columns' );
 function cp_team_column_content( $column, $post_id ) {
 	if ( 'cp_team_rank' === $column ) {
 		$rank = get_post_meta( $post_id, 'cp_team_rank', true );
+
 		if ( $rank ) {
 			echo esc_html( $rank );
+		}
+	}
+	if ( 'cp_team_team_id' === $column ) {
+		$id = get_post_meta( $post_id, 'cp_team_team_id', true );
+		if ( $id ) {
+			echo esc_html( $id );
 		}
 	}
 }
 add_action( 'manage_team_posts_custom_column', 'cp_team_column_content', 10, 2 );
 /**
- * Custom content for Team Rank column.
+ * Sortable Team Rank column.
+ * Sort by cp_team_rank meta value.
  *
  * @param string $columns  The column name.
  */
 function cp_team_sortable_columns( $columns ) {
 	$columns['cp_team_rank'] = 'cp_team_rank';
+
 	return $columns;
 }
 add_filter( 'manage_edit-team_sortable_columns', 'cp_team_sortable_columns' );
+function cp_team_column_orderby( $query ) {
+	if ( ! is_admin() || ! $query->is_main_query() ) {
+		return;
+	}
+
+	if ( 'cp_team_rank' === $query->get( 'orderby' ) ) {
+		$query->set( 'orderby', 'meta_value_num' ); // Or 'meta_value' if needed
+		$query->set( 'meta_key', 'cp_team_rank' );
+		$query->set( 'order', $query->get( 'order' ) ); // Preserve the order (ASC/DESC)
+	}
+}
+add_action( 'pre_get_posts', 'cp_team_column_orderby' );
 
 /**
  * Modify the admin columns for the 'game' post type.
